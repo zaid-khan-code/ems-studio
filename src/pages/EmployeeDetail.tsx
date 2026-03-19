@@ -1,0 +1,263 @@
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { employees, attendanceData, leaveRequests, payrollData, promotions, penalties, getStatusColor, formatRs } from '../data/dummyData';
+import { Pencil, Trash2, UserX, Plus } from 'lucide-react';
+import Modal from '../components/Modal';
+import DecisionBanner from '../components/DecisionBanner';
+import { useToastContext } from '../contexts/ToastContext';
+
+const deptColors: Record<string, string> = { Engineering: '#1565c0', Marketing: '#e67e22', HR: '#1b7a4e', Sales: '#b71c1c', Finance: '#00695c' };
+
+export default function EmployeeDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { showToast } = useToastContext();
+  const emp = employees.find(e => e.id === id) || employees[0];
+  const [tab, setTab] = useState('personal');
+  const [promoModal, setPromoModal] = useState(false);
+  const [penaltyModal, setPenaltyModal] = useState(false);
+
+  const tabs = ['Personal', 'Job Info', 'Medical', 'Attendance', 'Leave', 'Payslips', 'Promotions', 'Penalties'];
+
+  const empPayroll = payrollData.filter(p => p.empId === emp.id);
+  const empPromos = promotions.filter(p => p.empId === emp.id);
+  const empPenalties = penalties.filter(p => p.empId === emp.id);
+  const empLeaves = leaveRequests.filter(l => l.empId === emp.id);
+  const empAttendance = attendanceData.filter(a => a.empId === emp.id);
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="card" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div className="avatar avatar-lg" style={{ background: deptColors[emp.department] || 'var(--p)' }}>{emp.avatar}</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 18, fontWeight: 800 }}>{emp.name}</span>
+            <span className="mono" style={{ fontSize: 11, color: 'var(--t3)' }}>{emp.id}</span>
+            <span className={`pill ${getStatusColor(emp.jobStatus)}`}>{emp.jobStatus}</span>
+          </div>
+          <div style={{ fontSize: 12.5, color: 'var(--t2)', marginTop: 4 }}>{emp.department} · {emp.designation}</div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-ghost" onClick={() => navigate('/employees/add')}><Pencil size={13} /> Edit</button>
+          <button className="btn btn-danger"><UserX size={13} /> Deactivate</button>
+          <button className="btn btn-danger"><Trash2 size={13} /> Delete</button>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs">
+        {tabs.map(t => (
+          <button key={t} className={`tab ${tab === t.toLowerCase().replace(' ', '-') ? 'active' : ''}`} onClick={() => setTab(t.toLowerCase().replace(' ', '-'))}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      {tab === 'personal' && (
+        <div className="card">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+            {[
+              ['Full Name', emp.name], ['Father Name', emp.fatherName], ['Date of Birth', emp.dob],
+              ['CNIC', emp.cnic], ['Gender', emp.gender], ['Contact 1', emp.contact1],
+              ['Contact 2', emp.contact2 || 'N/A'], ['Emergency 1', emp.emergency1], ['Permanent Address', emp.permanentAddress],
+              ['Bank Name', emp.bankName || 'Not provided'], ['Bank Account', emp.bankAccount || 'Not provided'],
+            ].map(([label, value], i) => (
+              <div key={i}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{label}</div>
+                <div style={{ fontSize: 13, color: 'var(--t1)' }}>{value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab === 'job-info' && (
+        <div className="card">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+            {[
+              ['Department', emp.department], ['Designation', emp.designation], ['Employment Type', emp.employmentType],
+              ['Job Status', emp.jobStatus], ['Work Mode', emp.workMode], ['Work Location', emp.workLocation],
+              ['Shift', emp.shift], ['Reporting Manager', emp.reportingManager], ['Date of Joining', emp.dateOfJoining],
+            ].map(([label, value], i) => (
+              <div key={i}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{label}</div>
+                <div style={{ fontSize: 13, color: 'var(--t1)' }}>{value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab === 'medical' && (
+        <div className="card">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            {[['Blood Group', emp.bloodGroup], ['Allergies', emp.allergies], ['Chronic Conditions', emp.chronicConditions], ['Medications', emp.medications]].map(([l, v], i) => (
+              <div key={i}><div style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', marginBottom: 4 }}>{l}</div><div>{v}</div></div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab === 'attendance' && (
+        <div className="card">
+          <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+            {[{ label: 'Present', val: 5, cls: 'pill-green' }, { label: 'Absent', val: 1, cls: 'pill-red' }, { label: 'Late', val: 1, cls: 'pill-amber' }].map((s, i) => (
+              <span key={i} className={`pill ${s.cls}`}>{s.label}: {s.val}</span>
+            ))}
+          </div>
+          <table>
+            <thead><tr><th>Date</th><th>Day</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Late By</th></tr></thead>
+            <tbody>
+              {empAttendance.map((a, i) => (
+                <tr key={i}><td className="mono">{a.date}</td><td>{a.day}</td><td className="mono">{a.checkIn}</td><td className="mono">{a.checkOut}</td><td><span className={`pill ${getStatusColor(a.status)}`}>{a.status}</span></td><td className="mono">{a.lateBy || '-'}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tab === 'leave' && (
+        <div>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+            {[{ type: 'Annual', used: 5, total: 12, color: 'var(--p)' }, { type: 'Casual', used: 2, total: 12, color: 'var(--green)' }, { type: 'Medical', used: 0, total: 8, color: 'var(--teal)' }].map((b, i) => (
+              <div key={i} className="card" style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: 'var(--t3)', marginBottom: 4 }}>{b.type}</div>
+                <div className="mono" style={{ fontSize: 18, fontWeight: 800, color: b.color }}>{b.total - b.used}<span style={{ fontSize: 12, color: 'var(--t3)' }}> / {b.total}</span></div>
+                <div className="progress-bar" style={{ marginTop: 6 }}>
+                  <div className="progress-fill" style={{ width: `${((b.total - b.used) / b.total) * 100}%`, background: b.color }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="card">
+            <table>
+              <thead><tr><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Reason</th><th>Status</th></tr></thead>
+              <tbody>
+                {empLeaves.map((l, i) => (
+                  <tr key={i}><td>{l.leaveType}</td><td className="mono">{l.from}</td><td className="mono">{l.to}</td><td className="mono">{l.days}</td><td>{l.reason}</td><td><span className={`pill ${getStatusColor(l.status)}`}>{l.status}</span></td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab === 'payslips' && (
+        <div className="card">
+          <table>
+            <thead><tr><th>Period</th><th>Gross</th><th>Net</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              {empPayroll.map((p, i) => {
+                const gross = p.basic + p.houseAllowance + p.transport + p.otherEarning;
+                const ded = p.tax + p.loan + p.latePenalty + p.otherDeduction;
+                return (
+                  <tr key={i}><td>March 2026</td><td className="mono">{formatRs(gross)}</td><td className="mono" style={{ fontWeight: 600, color: 'var(--green)' }}>{formatRs(gross - ded)}</td><td><span className={`pill ${getStatusColor(p.status)}`}>{p.status}</span></td><td><button className="btn btn-sm btn-ghost">View Payslip</button></td></tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tab === 'promotions' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+            <button className="btn btn-primary" onClick={() => setPromoModal(true)}><Plus size={13} /> Record Promotion</button>
+          </div>
+          <div className="card">
+            {empPromos.length === 0 ? <div className="empty-state"><p>No promotions recorded</p></div> :
+              empPromos.map((p, i) => (
+                <div key={i} style={{ display: 'flex', gap: 16, padding: '12px 0', borderBottom: '1px solid var(--br2)', alignItems: 'flex-start' }}>
+                  <div style={{ width: 3, height: 40, background: 'var(--p)', borderRadius: 2, marginTop: 4 }} />
+                  <div>
+                    <div className="mono" style={{ fontSize: 10, color: 'var(--t3)' }}>{p.date}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{p.oldDesignation} → {p.newDesignation}</div>
+                    <div className="mono" style={{ fontSize: 11, color: 'var(--t2)' }}>{formatRs(p.oldSalary)} → {formatRs(p.newSalary)}</div>
+                    <div style={{ fontSize: 10.5, color: 'var(--t3)' }}>Approved by {p.approvedBy}</div>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <DecisionBanner>
+              DECISION NEEDED — Promotion Trigger<br />
+              Option A: Manual — HR records promotion manually (shown here)<br />
+              Option B: Automatic — System flags after full attendance month<br />
+              Option C: Both — System suggests, HR confirms<br />
+              Please confirm in meeting.
+            </DecisionBanner>
+          </div>
+          <Modal open={promoModal} onClose={() => setPromoModal(false)} title="Record Promotion" footer={
+            <><button className="btn btn-secondary" onClick={() => setPromoModal(false)}>Cancel</button><button className="btn btn-primary" onClick={() => { showToast('Promotion recorded'); setPromoModal(false); }}>Save</button></>
+          }>
+            <div className="form-group"><label className="form-label">Promotion Date</label><input className="input" type="date" /></div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Old Designation</label><input className="input" value={emp.designation} disabled /></div>
+              <div className="form-group"><label className="form-label">New Designation</label><input className="input" /></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Old Salary</label><input className="input mono" value="Rs 1,50,000" disabled /></div>
+              <div className="form-group"><label className="form-label">New Salary</label><input className="input mono" placeholder="Rs" /></div>
+            </div>
+            <div className="form-group"><label className="form-label">Notes</label><textarea className="input" rows={2} /></div>
+          </Modal>
+        </div>
+      )}
+
+      {tab === 'penalties' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+            <button className="btn btn-primary" onClick={() => setPenaltyModal(true)}><Plus size={13} /> Add Penalty</button>
+          </div>
+          <div className="card">
+            {empPenalties.length === 0 ? <div className="empty-state"><p>No penalties recorded</p></div> :
+              <table>
+                <thead><tr><th>Date</th><th>Type</th><th>Fine</th><th>Applied By</th><th>Status</th></tr></thead>
+                <tbody>
+                  {empPenalties.map((p, i) => (
+                    <tr key={i}><td className="mono">{p.date}</td><td>{p.type}</td><td className="mono">{formatRs(p.amount)}</td><td>{p.appliedBy}</td><td><span className={`pill ${getStatusColor(p.status)}`}>{p.status}</span></td></tr>
+                  ))}
+                </tbody>
+              </table>
+            }
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <DecisionBanner>
+              DECISION NEEDED — Half-day Penalty Amount<br />
+              The formula for the fine has not been decided yet.<br />
+              Options: Exactly half of daily salary / Fixed amount / Percentage<br />
+              Please confirm in meeting.
+            </DecisionBanner>
+          </div>
+          <Modal open={penaltyModal} onClose={() => setPenaltyModal(false)} title="Add Penalty" footer={
+            <><button className="btn btn-secondary" onClick={() => setPenaltyModal(false)}>Cancel</button><button className="btn btn-primary" onClick={() => { showToast('Penalty applied'); setPenaltyModal(false); }}>Apply Penalties</button></>
+          }>
+            {[
+              { label: 'Late 3+ days this month', fine: 'Half day salary — TBD' },
+              { label: 'Eating at desk', fine: 'Rs 500' },
+              { label: 'Smoking in office premises', fine: 'Rs 1,000' },
+              { label: 'Drinking tea/cold drink at desk', fine: 'Rs 500' },
+            ].map((p, i) => (
+              <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--br2)', fontSize: 12.5, cursor: 'pointer' }}>
+                <input type="checkbox" />
+                <span style={{ flex: 1 }}>{p.label}</span>
+                <span className="mono" style={{ fontSize: 11, color: 'var(--t3)' }}>Fine: {p.fine}</span>
+              </label>
+            ))}
+            <div className="form-group" style={{ marginTop: 12 }}>
+              <label className="form-label">Other</label>
+              <div className="form-row">
+                <input className="input" placeholder="Description" />
+                <input className="input mono" placeholder="Rs" />
+              </div>
+            </div>
+            <div className="form-group"><label className="form-label">Notes</label><textarea className="input" rows={2} /></div>
+          </Modal>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,210 @@
+import React, { useState, useEffect } from 'react';
+import { attendanceData, leaveRequests, formatRs } from '../data/dummyData';
+import { Calendar, Clock, Wallet, FileText, Plus, Cake } from 'lucide-react';
+import Modal from '../components/Modal';
+
+export default function MyDashboard() {
+  const [time, setTime] = useState(new Date());
+  const [leaveModal, setLeaveModal] = useState(false);
+  const [leaveType, setLeaveType] = useState('Annual Leave');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [reason, setReason] = useState('');
+
+  useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t); }, []);
+  const dateStr = time.toLocaleDateString('en-PK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const timeStr = time.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) + ' PKT';
+
+  const balances = [
+    { type: 'Annual', remaining: 7, total: 12, color: 'var(--p)' },
+    { type: 'Casual', remaining: 10, total: 12, color: 'var(--green)' },
+    { type: 'Medical', remaining: 8, total: 8, color: 'var(--teal)' },
+  ];
+
+  const calcDays = () => {
+    if (!fromDate || !toDate) return 0;
+    const diff = (new Date(toDate).getTime() - new Date(fromDate).getTime()) / (1000 * 60 * 60 * 24);
+    return Math.max(0, diff + 1);
+  };
+
+  const selectedBalance = balances.find(b => leaveType.toLowerCase().includes(b.type.toLowerCase()));
+  const daysRequested = calcDays();
+  const overBalance = selectedBalance && daysRequested > selectedBalance.remaining;
+
+  return (
+    <div>
+      {/* Welcome Banner */}
+      <div className="card" style={{ marginBottom: 12, background: 'linear-gradient(135deg, var(--pl), var(--card))' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--t1)' }}>Welcome back, Ahmed Ali 👋</div>
+            <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
+              {[
+                { label: 'Employee ID', value: 'EMP001' },
+                { label: 'Department', value: 'Engineering' },
+                { label: 'Shift', value: 'Morning Shift' },
+              ].map((item, i) => (
+                <span key={i} className="mono" style={{ fontSize: 10.5, color: 'var(--t3)' }}>
+                  {item.label}: <strong style={{ color: 'var(--t1)' }}>{item.value}</strong>
+                </span>
+              ))}
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div className="mono" style={{ fontSize: 11, color: 'var(--t2)' }}>{dateStr}</div>
+            <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--p)' }}>{timeStr}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stat Cards */}
+      <div className="kpi-strip">
+        <div className="kpi-item k1">
+          <div className="kpi-ico k1"><Calendar size={17} /></div>
+          <div>
+            <div className="kpi-val">18<span style={{ fontSize: 13, color: 'var(--t3)' }}> / 22</span></div>
+            <div className="kpi-lbl">Attendance This Month</div>
+            <div className="progress-bar" style={{ width: 80, marginTop: 4 }}>
+              <div className="progress-fill" style={{ width: '82%', background: 'var(--p)' }} />
+            </div>
+          </div>
+        </div>
+        <div className="kpi-item k2" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)', marginBottom: 4 }}>Leave Balance</div>
+          {balances.map((b, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+              <span style={{ fontSize: 10.5, color: 'var(--t2)', width: 50 }}>{b.type}</span>
+              <div className="progress-bar" style={{ flex: 1, height: 4 }}>
+                <div className="progress-fill" style={{ width: `${(b.remaining / b.total) * 100}%`, background: b.color }} />
+              </div>
+              <span className="mono" style={{ fontSize: 10, color: 'var(--t2)', width: 40 }}>{b.remaining}/{b.total}</span>
+            </div>
+          ))}
+        </div>
+        <div className="kpi-item k3">
+          <div className="kpi-ico k3"><Clock size={17} /></div>
+          <div><div className="kpi-val">1</div><div className="kpi-lbl">Pending Requests</div></div>
+        </div>
+        <div className="kpi-item k4">
+          <div className="kpi-ico k4"><Wallet size={17} /></div>
+          <div>
+            <div className="kpi-val" style={{ fontSize: 16 }}>{formatRs(178000)}</div>
+            <div className="kpi-lbl">Last Payslip · Mar 2026</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Attendance + Leave */}
+      <div className="g2">
+        <div className="card">
+          <div className="ch">
+            <div className="ct"><div className="ct-ico blue"><Calendar size={13} /></div>My Attendance (Last 7 Days)</div>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Day</th><th>Status</th><th>In</th><th>Out</th></tr></thead>
+              <tbody>
+                {attendanceData.map((a, i) => (
+                  <tr key={i} style={i === 0 ? { background: 'var(--pl)' } : {}}>
+                    <td className="mono">{a.date}</td>
+                    <td>{a.day}</td>
+                    <td><span className={`pill ${a.status === 'Present' ? 'pill-green' : a.status === 'Late' ? 'pill-amber' : 'pill-red'}`}>{a.status}</span></td>
+                    <td className="mono">{a.checkIn}</td>
+                    <td className="mono">{a.checkOut}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="ch">
+            <div className="ct"><div className="ct-ico amber"><FileText size={13} /></div>My Leave Requests</div>
+            <button className="btn btn-sm btn-primary" onClick={() => setLeaveModal(true)}>
+              <Plus size={12} /> Apply for Leave
+            </button>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th></tr></thead>
+              <tbody>
+                {leaveRequests.filter(l => l.empId === 'EMP001').slice(0, 5).map((l, i) => (
+                  <tr key={i}>
+                    <td>{l.leaveType}</td>
+                    <td className="mono">{l.from}</td>
+                    <td className="mono">{l.to}</td>
+                    <td className="mono">{l.days}</td>
+                    <td><span className={`pill ${l.status === 'Approved' ? 'pill-green' : l.status === 'Pending' ? 'pill-amber' : 'pill-red'}`}>{l.status}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Birthday */}
+      <div className="card">
+        <div className="ch">
+          <div className="ct"><div className="ct-ico amber"><Cake size={13} /></div>Upcoming Birthdays 🎂</div>
+        </div>
+        {[
+          { name: 'Ahmed Ali', date: 'Mar 15', days: 0, initials: 'AA' },
+          { name: 'Sara Khan', date: 'Mar 28', days: 9, initials: 'SK' },
+        ].map((b, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--br2)' }}>
+            <div className="feed-av" style={{ background: 'var(--p)', width: 28, height: 28, fontSize: 9 }}>{b.initials}</div>
+            <div style={{ flex: 1 }}><div style={{ fontSize: 12.5, fontWeight: 600 }}>{b.name}</div><div className="mono" style={{ fontSize: 10, color: 'var(--t3)' }}>{b.date}</div></div>
+            <span className={`pill ${b.days === 0 ? 'pill-green' : 'pill-blue'}`}>{b.days === 0 ? 'TODAY 🎂' : `In ${b.days} days`}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Leave Modal */}
+      <Modal open={leaveModal} onClose={() => setLeaveModal(false)} title="Apply for Leave" footer={
+        <>
+          <button className="btn btn-secondary" onClick={() => setLeaveModal(false)}>Cancel</button>
+          <button className="btn btn-primary" disabled={!fromDate || !toDate || !reason}>Submit Request</button>
+        </>
+      }>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--t3)', marginBottom: 8 }}>LEAVE BALANCE</div>
+          {balances.map((b, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12 }}>
+              <span>{b.type} Leave</span>
+              <span className="mono" style={{ color: b.color, fontWeight: 600 }}>{b.remaining} days remaining</span>
+            </div>
+          ))}
+        </div>
+        <div className="form-group">
+          <label className="form-label">Leave Type</label>
+          <select className="input select-input" value={leaveType} onChange={e => setLeaveType(e.target.value)}>
+            <option>Annual Leave (7 remaining)</option>
+            <option>Casual Leave (10 remaining)</option>
+            <option>Medical Leave (8 remaining)</option>
+          </select>
+        </div>
+        <div className="form-row">
+          <div className="form-group">
+            <label className="form-label">From Date</label>
+            <input className="input" type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">To Date</label>
+            <input className="input" type="date" value={toDate} onChange={e => setToDate(e.target.value)} />
+          </div>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Days Requested</label>
+          <input className="input mono" value={daysRequested || ''} readOnly style={{ background: 'var(--steell)' }} />
+          {overBalance && <div style={{ color: 'var(--red)', fontSize: 11, marginTop: 4 }}>⚠ You only have {selectedBalance?.remaining} days remaining in this leave type</div>}
+        </div>
+        <div className="form-group">
+          <label className="form-label">Reason</label>
+          <textarea className="input" rows={3} value={reason} onChange={e => setReason(e.target.value)} placeholder="Enter reason for leave..." />
+        </div>
+      </Modal>
+    </div>
+  );
+}
