@@ -16,7 +16,7 @@ export default function SettingsPage({ title, columns, data: initialData, modalF
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const { showToast } = useToastContext();
 
-  const fields = modalFields || columns.filter(c => c !== 'Active').map(c => ({ label: c }));
+  const fields: { label: string; type?: string; options?: string[] }[] = modalFields || columns.filter(c => c !== 'Active').map(c => ({ label: c }));
 
   return (
     <div>
