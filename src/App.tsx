@@ -20,7 +20,7 @@ import MyAttendance from './pages/MyAttendance';
 import MyPayslips from './pages/MyPayslips';
 import MyLeave from './pages/MyLeave';
 import MyProfile from './pages/MyProfile';
-import { DepartmentsPage, DesignationsPage, WorkModesPage, WorkLocationsPage, EmploymentTypesPage, JobStatusesPage, ShiftsPage, LeaveTypesPage, LeavePoliciesPage, PayrollComponentsPage, PenaltiesConfigPage } from './pages/settings/AllSettings';
+import { DepartmentsPage, DesignationsPage, WorkModesPage, WorkLocationsPage, EmploymentTypesPage, JobStatusesPage, ReportingManagersPage, ShiftsPage, LeaveTypesPage, LeavePoliciesPage, PayrollComponentsPage, PenaltiesConfigPage } from './pages/settings/AllSettings';
 import CustomFields from './pages/settings/CustomFields';
 
 function RootRedirect() {
@@ -48,6 +48,7 @@ const App = () => (
             <Route path="/accounts" element={<Accounts />} />
             <Route path="/audit-log" element={<AuditLog />} />
             <Route path="/settings/departments" element={<DepartmentsPage />} />
+            <Route path="/settings/reporting-managers" element={<ReportingManagersPage />} />
             <Route path="/settings/designations" element={<DesignationsPage />} />
             <Route path="/settings/work-modes" element={<WorkModesPage />} />
             <Route path="/settings/work-locations" element={<WorkLocationsPage />} />

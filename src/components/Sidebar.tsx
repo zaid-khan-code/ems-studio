@@ -29,6 +29,7 @@ export default function Sidebar() {
     { to: '/settings/work-modes', label: 'Work Modes' },
     { to: '/settings/work-locations', label: 'Work Locations' },
     { to: '/settings/employment-types', label: 'Employment Types' },
+    { to: '/settings/reporting-managers', label: 'Reporting Managers' },
     { to: '/settings/job-statuses', label: 'Job Statuses' },
     { to: '/settings/shifts', label: 'Shifts' },
     { to: '/settings/leave-types', label: 'Leave Types' },
