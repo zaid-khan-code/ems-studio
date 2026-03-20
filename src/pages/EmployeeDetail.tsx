@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { employees, attendanceData, leaveRequests, payrollData, promotions, penalties, getStatusColor, formatRs } from '../data/dummyData';
+import { employees, attendanceData, leaveRequests, payrollData, promotions, penalties, getStatusColor, formatPKR } from '../data/dummyData';
 import { Pencil, Trash2, UserX, Plus } from 'lucide-react';
 import Modal from '../components/Modal';
 import DecisionBanner from '../components/DecisionBanner';
@@ -54,15 +54,15 @@ export default function EmployeeDetail() {
         ))}
       </div>
 
-      {/* Tab Content */}
       {tab === 'personal' && (
         <div className="card">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
             {[
               ['Full Name', emp.name], ['Father Name', emp.fatherName], ['Date of Birth', emp.dob],
               ['CNIC', emp.cnic], ['Gender', emp.gender], ['Contact 1', emp.contact1],
-              ['Contact 2', emp.contact2 || 'N/A'], ['Emergency 1', emp.emergency1], ['Permanent Address', emp.permanentAddress],
-              ['Bank Name', emp.bankName || 'Not provided'], ['Bank Account', emp.bankAccount || 'Not provided'],
+              ['Contact 2', emp.contact2 || 'N/A'], ['Emergency 1', emp.emergency1], ['Emergency 2', emp.emergency2 || 'N/A'],
+              ['Permanent Address', emp.permanentAddress], ['Bank Name', emp.bankName || 'Not provided'], ['Bank Account', emp.bankAccount || 'Not provided'],
+              ['Payment Mode', emp.paymentMode],
             ].map(([label, value], i) => (
               <div key={i}>
                 <div style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{label}</div>
@@ -80,12 +80,22 @@ export default function EmployeeDetail() {
               ['Department', emp.department], ['Designation', emp.designation], ['Employment Type', emp.employmentType],
               ['Job Status', emp.jobStatus], ['Work Mode', emp.workMode], ['Work Location', emp.workLocation],
               ['Shift', emp.shift], ['Reporting Manager', emp.reportingManager], ['Date of Joining', emp.dateOfJoining],
+              ['Commission Eligible', emp.commissionEligible ? 'Yes' : 'No'],
             ].map(([label, value], i) => (
               <div key={i}>
                 <div style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{label}</div>
                 <div style={{ fontSize: 13, color: 'var(--t1)' }}>{value}</div>
               </div>
             ))}
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', marginBottom: 8 }}>Salary Structure</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+              {[['Basic', emp.salary.basic], ['House Rent', emp.salary.houseRent], ['Medical', emp.salary.medical], ['Conveyance', emp.salary.conveyance], ['Commission', emp.salary.commission]].map(([l, v], i) => (
+                <div key={i}><span style={{ fontSize: 11, color: 'var(--t3)' }}>{l}: </span><span className="mono" style={{ fontWeight: 600 }}>{formatPKR(v as number)}</span></div>
+              ))}
+              <div><span style={{ fontSize: 11, color: 'var(--t3)' }}>Total: </span><span className="mono" style={{ fontWeight: 700, color: 'var(--p)' }}>{formatPKR(emp.salary.basic + emp.salary.houseRent + emp.salary.medical + emp.salary.conveyance + emp.salary.commission)}</span></div>
+            </div>
           </div>
         </div>
       )}
@@ -150,10 +160,10 @@ export default function EmployeeDetail() {
             <thead><tr><th>Period</th><th>Gross</th><th>Net</th><th>Status</th><th>Action</th></tr></thead>
             <tbody>
               {empPayroll.map((p, i) => {
-                const gross = p.basic + p.houseAllowance + p.transport + p.otherEarning;
-                const ded = p.tax + p.loan + p.latePenalty + p.otherDeduction;
+                const gross = p.basic + p.houseRent + p.medical + p.conveyance + p.commission;
+                const ded = p.absentDeduction + p.tax + p.loan + p.advance + p.latePenalty + p.otherDeduction;
                 return (
-                  <tr key={i}><td>March 2026</td><td className="mono">{formatRs(gross)}</td><td className="mono" style={{ fontWeight: 600, color: 'var(--green)' }}>{formatRs(gross - ded)}</td><td><span className={`pill ${getStatusColor(p.status)}`}>{p.status}</span></td><td><button className="btn btn-sm btn-ghost">View Payslip</button></td></tr>
+                  <tr key={i}><td>March 2026</td><td className="mono">{formatPKR(gross)}</td><td className="mono" style={{ fontWeight: 600, color: 'var(--green)' }}>{formatPKR(gross - ded)}</td><td><span className={`pill ${getStatusColor(p.status)}`}>{p.status}</span></td><td><button className="btn btn-sm btn-ghost">View Payslip</button></td></tr>
                 );
               })}
             </tbody>
@@ -174,7 +184,7 @@ export default function EmployeeDetail() {
                   <div>
                     <div className="mono" style={{ fontSize: 10, color: 'var(--t3)' }}>{p.date}</div>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{p.oldDesignation} → {p.newDesignation}</div>
-                    <div className="mono" style={{ fontSize: 11, color: 'var(--t2)' }}>{formatRs(p.oldSalary)} → {formatRs(p.newSalary)}</div>
+                    <div className="mono" style={{ fontSize: 11, color: 'var(--t2)' }}>{formatPKR(p.oldSalary)} → {formatPKR(p.newSalary)}</div>
                     <div style={{ fontSize: 10.5, color: 'var(--t3)' }}>Approved by {p.approvedBy}</div>
                   </div>
                 </div>
@@ -199,8 +209,8 @@ export default function EmployeeDetail() {
               <div className="form-group"><label className="form-label">New Designation</label><input className="input" /></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">Old Salary</label><input className="input mono" value="Rs 1,50,000" disabled /></div>
-              <div className="form-group"><label className="form-label">New Salary</label><input className="input mono" placeholder="Rs" /></div>
+              <div className="form-group"><label className="form-label">Old Salary</label><input className="input mono" value={formatPKR(emp.salary.basic)} disabled /></div>
+              <div className="form-group"><label className="form-label">New Salary</label><input className="input mono" placeholder="PKR" /></div>
             </div>
             <div className="form-group"><label className="form-label">Notes</label><textarea className="input" rows={2} /></div>
           </Modal>
@@ -218,7 +228,7 @@ export default function EmployeeDetail() {
                 <thead><tr><th>Date</th><th>Type</th><th>Fine</th><th>Applied By</th><th>Status</th></tr></thead>
                 <tbody>
                   {empPenalties.map((p, i) => (
-                    <tr key={i}><td className="mono">{p.date}</td><td>{p.type}</td><td className="mono">{formatRs(p.amount)}</td><td>{p.appliedBy}</td><td><span className={`pill ${getStatusColor(p.status)}`}>{p.status}</span></td></tr>
+                    <tr key={i}><td className="mono">{p.date}</td><td>{p.type}</td><td className="mono">{formatPKR(p.amount)}</td><td>{p.appliedBy}</td><td><span className={`pill ${getStatusColor(p.status)}`}>{p.status}</span></td></tr>
                   ))}
                 </tbody>
               </table>
@@ -237,9 +247,9 @@ export default function EmployeeDetail() {
           }>
             {[
               { label: 'Late 3+ days this month', fine: 'Half day salary — TBD' },
-              { label: 'Eating at desk', fine: 'Rs 500' },
-              { label: 'Smoking in office premises', fine: 'Rs 1,000' },
-              { label: 'Drinking tea/cold drink at desk', fine: 'Rs 500' },
+              { label: 'Eating at desk', fine: 'PKR 500' },
+              { label: 'Smoking in office premises', fine: 'PKR 1,000' },
+              { label: 'Drinking tea/cold drink at desk', fine: 'PKR 500' },
             ].map((p, i) => (
               <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--br2)', fontSize: 12.5, cursor: 'pointer' }}>
                 <input type="checkbox" />
@@ -251,7 +261,7 @@ export default function EmployeeDetail() {
               <label className="form-label">Other</label>
               <div className="form-row">
                 <input className="input" placeholder="Description" />
-                <input className="input mono" placeholder="Rs" />
+                <input className="input mono" placeholder="PKR" />
               </div>
             </div>
             <div className="form-group"><label className="form-label">Notes</label><textarea className="input" rows={2} /></div>

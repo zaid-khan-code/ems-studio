@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { attendanceData, leaveRequests, formatRs } from '../data/dummyData';
+import { attendanceData, leaveRequests, formatPKR } from '../data/dummyData';
 import { Calendar, Clock, Wallet, FileText, Plus, Cake } from 'lucide-react';
 import Modal from '../components/Modal';
+import { useToastContext } from '../contexts/ToastContext';
 
 export default function MyDashboard() {
   const [time, setTime] = useState(new Date());
@@ -10,6 +11,7 @@ export default function MyDashboard() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [reason, setReason] = useState('');
+  const { showToast } = useToastContext();
 
   useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t); }, []);
   const dateStr = time.toLocaleDateString('en-PK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -88,7 +90,7 @@ export default function MyDashboard() {
         <div className="kpi-item k4">
           <div className="kpi-ico k4"><Wallet size={17} /></div>
           <div>
-            <div className="kpi-val" style={{ fontSize: 16 }}>{formatRs(178000)}</div>
+            <div className="kpi-val" style={{ fontSize: 16 }}>{formatPKR(178000)}</div>
             <div className="kpi-lbl">Last Payslip · Mar 2026</div>
           </div>
         </div>
@@ -165,7 +167,7 @@ export default function MyDashboard() {
       <Modal open={leaveModal} onClose={() => setLeaveModal(false)} title="Apply for Leave" footer={
         <>
           <button className="btn btn-secondary" onClick={() => setLeaveModal(false)}>Cancel</button>
-          <button className="btn btn-primary" disabled={!fromDate || !toDate || !reason}>Submit Request</button>
+          <button className="btn btn-primary" disabled={!fromDate || !toDate || !reason} onClick={() => { showToast('Leave request submitted'); setLeaveModal(false); }}>Submit Request</button>
         </>
       }>
         <div style={{ marginBottom: 16 }}>
