@@ -246,7 +246,7 @@ export default function Leave() {
         <><button className="btn btn-secondary" onClick={() => setEditModal(null)}>Cancel</button>
         <button className="btn btn-primary" onClick={saveEdit} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button></>
       }>
-        <DecisionBanner text="DECISION NEEDED — HR Edit Permissions: Which fields can HR edit? Leave type, dates, reason, or all? Please confirm in meeting." />
+        <DecisionBanner>DECISION NEEDED — HR Edit Permissions: Which fields can HR edit? Leave type, dates, reason, or all? Please confirm in meeting.</DecisionBanner>
         <div style={{ marginTop: 12 }} />
         <div className="form-group">
           <label className="form-label">Employee</label>
