@@ -1,6 +1,5 @@
 import React from 'react';
-import { formatRs } from '../data/dummyData';
-import { Wallet } from 'lucide-react';
+import { formatPKR } from '../data/dummyData';
 
 export default function MyPayslips() {
   const payslips = [
@@ -14,7 +13,7 @@ export default function MyPayslips() {
       <div className="card">
         <table>
           <thead><tr><th>Period</th><th>Gross</th><th>Net</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody>{payslips.map((p, i) => <tr key={i}><td>{p.period}</td><td className="mono">{formatRs(p.gross)}</td><td className="mono" style={{ fontWeight: 600, color: 'var(--green)' }}>{formatRs(p.net)}</td><td><span className={`pill ${p.status === 'Finalized' ? 'pill-green' : 'pill-amber'}`}>{p.status}</span></td><td><button className="btn btn-sm btn-ghost">View</button></td></tr>)}</tbody>
+          <tbody>{payslips.map((p, i) => <tr key={i}><td>{p.period}</td><td className="mono">{formatPKR(p.gross)}</td><td className="mono" style={{ fontWeight: 600, color: 'var(--green)' }}>{formatPKR(p.net)}</td><td><span className={`pill ${p.status === 'Finalized' ? 'pill-green' : 'pill-amber'}`}>{p.status}</span></td><td><button className="btn btn-sm btn-ghost">View</button></td></tr>)}</tbody>
         </table>
       </div>
     </div>

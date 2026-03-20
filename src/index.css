@@ -529,3 +529,18 @@ tbody tr:hover { background: var(--hover); }
 .empty-state { text-align: center; padding: 40px; color: var(--t3); }
 .empty-state svg { margin-bottom: 12px; }
 .empty-state p { font-size: 13px; }
+
+/* Wizard animations */
+@keyframes slideOutLeft { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-20px)} }
+@keyframes slideOutRight { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(20px)} }
+@keyframes slideInFromRight { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+@keyframes slideInFromLeft { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+
+/* Wizard toggle */
+.wizard-toggle {
+  flex: 1; padding: 8px 12px; font-size: 12.5px; font-weight: 500;
+  border: none; background: transparent; cursor: pointer; color: var(--t2);
+  font-family: 'Outfit', sans-serif; transition: all .15s ease;
+}
+.wizard-toggle.active { background: var(--p); color: #fff; }
+.wizard-toggle:hover:not(.active) { background: var(--hover); }

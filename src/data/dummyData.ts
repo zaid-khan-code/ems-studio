@@ -23,26 +23,36 @@ export interface Employee {
   postalAddress: string;
   bankName: string;
   bankAccount: string;
+  paymentMode: string;
   bloodGroup: string;
   allergies: string;
   chronicConditions: string;
   medications: string;
   avatar: string;
+  commissionEligible: boolean;
+  salary: {
+    basic: number;
+    houseRent: number;
+    medical: number;
+    conveyance: number;
+    commission: number;
+  };
 }
 
 export const employees: Employee[] = [
-  { id: 'EMP001', name: 'Ahmed Ali', fatherName: 'Ali Khan', dob: '1990-03-15', cnic: '35201-1234567-1', gender: 'Male', department: 'Engineering', designation: 'Senior Developer', employmentType: 'Full Time', jobStatus: 'Active', workMode: 'Hybrid', workLocation: 'Lahore HQ', shift: 'Morning Shift', reportingManager: 'N/A', dateOfJoining: '2020-01-15', contact1: '0301-1234567', contact2: '0321-7654321', emergency1: '0300-9876543', permanentAddress: 'House 45, Street 12, Gulberg III, Lahore', postalAddress: 'Same as permanent', bankName: 'HBL', bankAccount: '1234-5678-9012', bloodGroup: 'B+', allergies: 'None', chronicConditions: 'None', medications: 'None', avatar: 'AA' },
-  { id: 'EMP002', name: 'Sara Khan', fatherName: 'Imran Khan', dob: '1992-03-28', cnic: '35202-2345678-2', gender: 'Female', department: 'Marketing', designation: 'Marketing Manager', employmentType: 'Full Time', jobStatus: 'Active', workMode: 'On-Site', workLocation: 'Lahore HQ', shift: 'Morning Shift', reportingManager: 'Ahmed Ali', dateOfJoining: '2019-06-01', contact1: '0302-2345678', emergency1: '0300-8765432', permanentAddress: 'Apartment 8, Block C, DHA Phase 5, Lahore', postalAddress: 'Same as permanent', bankName: 'UBL', bankAccount: '2345-6789-0123', bloodGroup: 'A+', allergies: 'Peanuts', chronicConditions: 'None', medications: 'None', avatar: 'SK' },
-  { id: 'EMP003', name: 'Usman Malik', fatherName: 'Tariq Malik', dob: '1988-04-03', cnic: '35203-3456789-3', gender: 'Male', department: 'HR', designation: 'HR Executive', employmentType: 'Contract', jobStatus: 'Active', workMode: 'On-Site', workLocation: 'Lahore HQ', shift: 'Morning Shift', reportingManager: 'Sara Khan', dateOfJoining: '2021-03-10', contact1: '0303-3456789', emergency1: '0300-7654321', permanentAddress: 'House 12, Johar Town, Lahore', postalAddress: 'Same as permanent', bankName: 'MCB', bankAccount: '3456-7890-1234', bloodGroup: 'O+', allergies: 'None', chronicConditions: 'Asthma', medications: 'Inhaler', avatar: 'UM' },
-  { id: 'EMP004', name: 'Fatima Raza', fatherName: 'Hassan Raza', dob: '1995-04-19', cnic: '35204-4567890-4', gender: 'Female', department: 'Sales', designation: 'Sales Officer', employmentType: 'Full Time', jobStatus: 'Probation', workMode: 'On-Site', workLocation: 'Karachi Office', shift: 'Morning Shift', reportingManager: 'Usman Malik', dateOfJoining: '2023-09-01', contact1: '0304-4567890', emergency1: '0300-6543210', permanentAddress: 'Flat 3B, Clifton, Karachi', postalAddress: 'Same as permanent', bankName: '', bankAccount: '', bloodGroup: 'AB-', allergies: 'Dust', chronicConditions: 'None', medications: 'None', avatar: 'FR' },
-  { id: 'EMP005', name: 'Bilal Ahmed', fatherName: 'Kashif Ahmed', dob: '1993-05-07', cnic: '35205-5678901-5', gender: 'Male', department: 'Finance', designation: 'Accountant', employmentType: 'Full Time', jobStatus: 'Active', workMode: 'Remote', workLocation: 'Remote', shift: 'Night Shift', reportingManager: 'Sara Khan', dateOfJoining: '2022-01-20', contact1: '0305-5678901', emergency1: '0300-5432109', permanentAddress: 'House 67, Model Town, Lahore', postalAddress: 'Same as permanent', bankName: '', bankAccount: '', bloodGroup: 'A-', allergies: 'None', chronicConditions: 'None', medications: 'None', avatar: 'BA' },
+  { id: 'EMP001', name: 'Ahmed Ali', fatherName: 'Ali Khan', dob: '1990-03-15', cnic: '42101-1234567-1', gender: 'Male', department: 'Engineering', designation: 'Senior Developer', employmentType: 'Full Time', jobStatus: 'Active', workMode: 'Hybrid', workLocation: 'Head Office', shift: 'Morning Shift', reportingManager: 'Sara Khan', dateOfJoining: '2020-01-15', contact1: '0300-1234567', contact2: '0321-7654321', emergency1: '0321-9876543', emergency2: '0312-1111111', permanentAddress: 'House 45, Street 12, Gulberg III, Lahore', postalAddress: 'Same as permanent', bankName: 'HBL', bankAccount: '1234-5678-9012', paymentMode: 'Online Transfer', bloodGroup: 'B+', allergies: 'None', chronicConditions: 'None', medications: 'None', avatar: 'AA', commissionEligible: false, salary: { basic: 150000, houseRent: 30000, medical: 10000, conveyance: 5000, commission: 0 } },
+  { id: 'EMP002', name: 'Sara Khan', fatherName: 'Khan Ahmed', dob: '1992-03-28', cnic: '42201-7654321-2', gender: 'Female', department: 'Marketing', designation: 'Marketing Manager', employmentType: 'Full Time', jobStatus: 'Active', workMode: 'On-Site', workLocation: 'Head Office', shift: 'Morning Shift', reportingManager: 'Ali Hassan', dateOfJoining: '2019-06-01', contact1: '0302-2345678', emergency1: '0300-8765432', permanentAddress: 'Apartment 8, Block C, DHA Phase 5, Lahore', postalAddress: 'Same as permanent', bankName: 'UBL', bankAccount: '2345-6789-0123', paymentMode: 'Online Transfer', bloodGroup: 'A+', allergies: 'Peanuts', chronicConditions: 'None', medications: 'None', avatar: 'SK', commissionEligible: true, salary: { basic: 130000, houseRent: 25000, medical: 8000, conveyance: 5000, commission: 5000 } },
+  { id: 'EMP003', name: 'Usman Malik', fatherName: 'Malik Usman', dob: '1988-04-03', cnic: '42301-1122334-3', gender: 'Male', department: 'HR', designation: 'HR Executive', employmentType: 'Contract', jobStatus: 'Active', workMode: 'On-Site', workLocation: 'Head Office', shift: 'Morning Shift', reportingManager: 'Ali Hassan', dateOfJoining: '2021-03-10', contact1: '0303-3456789', emergency1: '0300-7654321', permanentAddress: 'House 12, Johar Town, Lahore', postalAddress: 'Same as permanent', bankName: 'MCB', bankAccount: '3456-7890-1234', paymentMode: 'Online Transfer', bloodGroup: 'O+', allergies: 'None', chronicConditions: 'Asthma', medications: 'Inhaler', avatar: 'UM', commissionEligible: false, salary: { basic: 80000, houseRent: 15000, medical: 5000, conveyance: 3000, commission: 0 } },
+  { id: 'EMP004', name: 'Fatima Raza', fatherName: 'Raza Ali', dob: '1995-04-19', cnic: '42401-9988776-4', gender: 'Female', department: 'Sales', designation: 'Sales Officer', employmentType: 'Full Time', jobStatus: 'Probation', workMode: 'On-Site', workLocation: 'Branch B', shift: 'Morning Shift', reportingManager: 'Sara Khan', dateOfJoining: '2023-09-01', contact1: '0304-4567890', emergency1: '0300-6543210', permanentAddress: 'Flat 3B, Clifton, Karachi', postalAddress: 'Same as permanent', bankName: '', bankAccount: '', paymentMode: 'Cash', bloodGroup: 'AB-', allergies: 'Dust', chronicConditions: 'None', medications: 'None', avatar: 'FR', commissionEligible: true, salary: { basic: 70000, houseRent: 12000, medical: 5000, conveyance: 3000, commission: 2000 } },
+  { id: 'EMP005', name: 'Bilal Ahmed', fatherName: 'Ahmed Bilal', dob: '1993-05-07', cnic: '42501-5544332-5', gender: 'Male', department: 'Finance', designation: 'Accountant', employmentType: 'Full Time', jobStatus: 'Active', workMode: 'Remote', workLocation: 'Branch B', shift: 'Night Shift', reportingManager: 'Ali Hassan', dateOfJoining: '2022-01-20', contact1: '0305-5678901', emergency1: '0300-5432109', permanentAddress: 'House 67, Model Town, Lahore', postalAddress: 'Same as permanent', bankName: '', bankAccount: '', paymentMode: 'Online Transfer', bloodGroup: 'A-', allergies: 'None', chronicConditions: 'None', medications: 'None', avatar: 'BA', commissionEligible: false, salary: { basic: 100000, houseRent: 18000, medical: 8000, conveyance: 5000, commission: 0 } },
 ];
 
+export const reportingManagers = ['Ali Hassan', 'Sara Khan', 'Ahmed Ali'];
 export const departments = ['Engineering', 'Marketing', 'HR', 'Sales', 'Finance'];
 export const designations = ['Senior Developer', 'Marketing Manager', 'HR Executive', 'Sales Officer', 'Accountant', 'Junior Developer', 'Lead Developer', 'Manager'];
-export const workModes = ['On-Site', 'Remote', 'Hybrid'];
-export const workLocations = ['Lahore HQ', 'Karachi Office', 'Islamabad Office', 'Remote'];
-export const employmentTypes = ['Full Time', 'Part Time', 'Contract', 'Intern'];
+export const workModes = ['On-Site', 'Remote', 'Hybrid', 'Office'];
+export const workLocations = ['Head Office', 'Branch B', 'Remote'];
+export const employmentTypes = ['Permanent', 'Contract', 'Probation', 'Intern'];
 export const jobStatuses = ['Active', 'Probation', 'Notice Period', 'Terminated'];
 export const shifts = [
   { name: 'Morning Shift', start: '09:00', end: '18:00', lateAfter: 15 },
@@ -80,11 +90,11 @@ export const leaveRequests = [
 ];
 
 export const payrollData = [
-  { empId: 'EMP001', name: 'Ahmed Ali', basic: 150000, houseAllowance: 30000, transport: 10000, otherEarning: 5000, tax: 12000, loan: 0, latePenalty: 0, otherDeduction: 5000, status: 'Draft' },
-  { empId: 'EMP002', name: 'Sara Khan', basic: 120000, houseAllowance: 24000, transport: 8000, otherEarning: 3000, tax: 9000, loan: 5000, latePenalty: 0, otherDeduction: 2000, status: 'Draft' },
-  { empId: 'EMP003', name: 'Usman Malik', basic: 80000, houseAllowance: 16000, transport: 6000, otherEarning: 2000, tax: 5000, loan: 0, latePenalty: 2000, otherDeduction: 1000, status: 'Finalized' },
-  { empId: 'EMP004', name: 'Fatima Raza', basic: 60000, houseAllowance: 12000, transport: 5000, otherEarning: 0, tax: 3000, loan: 0, latePenalty: 0, otherDeduction: 0, status: 'Draft' },
-  { empId: 'EMP005', name: 'Bilal Ahmed', basic: 90000, houseAllowance: 18000, transport: 7000, otherEarning: 3000, tax: 6000, loan: 10000, latePenalty: 0, otherDeduction: 2000, status: 'Draft' },
+  { empId: 'EMP001', name: 'Ahmed Ali', workingDays: 31, paidDays: 28, absents: 3, clUsed: 0, mlUsed: 0, alUsed: 0, basic: 150000, houseRent: 30000, medical: 10000, conveyance: 5000, commission: 0, absentDeduction: 14516.13, tax: 12000, loan: 0, advance: 0, latePenalty: 0, otherDeduction: 0, status: 'Draft', paymentMode: 'Online Transfer' },
+  { empId: 'EMP002', name: 'Sara Khan', workingDays: 31, paidDays: 31, absents: 0, clUsed: 0, mlUsed: 0, alUsed: 0, basic: 130000, houseRent: 25000, medical: 8000, conveyance: 5000, commission: 5000, absentDeduction: 0, tax: 9000, loan: 5000, advance: 0, latePenalty: 0, otherDeduction: 2000, status: 'Draft', paymentMode: 'Online Transfer' },
+  { empId: 'EMP003', name: 'Usman Malik', workingDays: 31, paidDays: 30, absents: 1, clUsed: 0, mlUsed: 0, alUsed: 0, basic: 80000, houseRent: 15000, medical: 5000, conveyance: 3000, commission: 0, absentDeduction: 2580.65, tax: 5000, loan: 0, advance: 0, latePenalty: 2000, otherDeduction: 1000, status: 'Finalized', paymentMode: 'Online Transfer' },
+  { empId: 'EMP004', name: 'Fatima Raza', workingDays: 31, paidDays: 31, absents: 0, clUsed: 0, mlUsed: 0, alUsed: 0, basic: 70000, houseRent: 12000, medical: 5000, conveyance: 3000, commission: 2000, absentDeduction: 0, tax: 3000, loan: 0, advance: 0, latePenalty: 0, otherDeduction: 0, status: 'Draft', paymentMode: 'Cash' },
+  { empId: 'EMP005', name: 'Bilal Ahmed', workingDays: 31, paidDays: 29, absents: 2, clUsed: 0, mlUsed: 0, alUsed: 0, basic: 100000, houseRent: 18000, medical: 8000, conveyance: 5000, commission: 0, absentDeduction: 6451.61, tax: 6000, loan: 10000, advance: 0, latePenalty: 0, otherDeduction: 2000, status: 'Draft', paymentMode: 'Online Transfer' },
 ];
 
 export const promotions = [
@@ -141,13 +151,16 @@ export const leavePolicies = [
 
 export const payrollComponents = [
   { name: 'Basic Salary', type: 'Earning', taxable: true, order: 1, active: true },
-  { name: 'House Allowance', type: 'Earning', taxable: false, order: 2, active: true },
-  { name: 'Transport Allowance', type: 'Earning', taxable: false, order: 3, active: true },
-  { name: 'Other Allowance', type: 'Earning', taxable: false, order: 4, active: true },
-  { name: 'Tax Deduction', type: 'Deduction', taxable: false, order: 5, active: true },
-  { name: 'Loan Deduction', type: 'Deduction', taxable: false, order: 6, active: true },
+  { name: 'House Rent Allowance', type: 'Earning', taxable: false, order: 2, active: true },
+  { name: 'Medical Allowance', type: 'Earning', taxable: false, order: 3, active: true },
+  { name: 'Conveyance Allowance', type: 'Earning', taxable: false, order: 4, active: true },
+  { name: 'Commission', type: 'Earning', taxable: true, order: 5, active: true },
+  { name: 'Absent Deduction', type: 'Deduction', taxable: false, order: 6, active: true },
   { name: 'Late Penalty', type: 'Deduction', taxable: false, order: 7, active: true },
-  { name: 'Other Deductions', type: 'Deduction', taxable: false, order: 8, active: true },
+  { name: 'Advance', type: 'Deduction', taxable: false, order: 8, active: true },
+  { name: 'Loan Installment', type: 'Deduction', taxable: false, order: 9, active: true },
+  { name: 'Tax', type: 'Deduction', taxable: false, order: 10, active: true },
+  { name: 'Other Deductions', type: 'Deduction', taxable: false, order: 11, active: true },
 ];
 
 export const penaltiesConfig = [
@@ -173,8 +186,24 @@ export const customFields = {
   extra: [],
 };
 
-export function formatRs(amount: number): string {
-  return 'Rs ' + amount.toLocaleString('en-PK');
+export function formatPKR(amount: number): string {
+  return 'PKR ' + amount.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+// Keep old name as alias for backward compat during transition
+export const formatRs = formatPKR;
+
+export function numberToWords(n: number): string {
+  if (n === 0) return 'Zero';
+  const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  const num = Math.floor(Math.abs(n));
+  if (num < 20) return ones[num];
+  if (num < 100) return tens[Math.floor(num/10)] + (num%10 ? ' ' + ones[num%10] : '');
+  if (num < 1000) return ones[Math.floor(num/100)] + ' hundred' + (num%100 ? ' and ' + numberToWords(num%100) : '');
+  if (num < 100000) return numberToWords(Math.floor(num/1000)) + ' thousand' + (num%1000 ? ' ' + numberToWords(num%1000) : '');
+  if (num < 10000000) return numberToWords(Math.floor(num/100000)) + ' lakh' + (num%100000 ? ' ' + numberToWords(num%100000) : '');
+  return numberToWords(Math.floor(num/10000000)) + ' crore' + (num%10000000 ? ' ' + numberToWords(num%10000000) : '');
 }
 
 export function getStatusColor(status: string): string {
