@@ -20,7 +20,7 @@ import MyAttendance from './pages/MyAttendance';
 import MyPayslips from './pages/MyPayslips';
 import MyLeave from './pages/MyLeave';
 import MyProfile from './pages/MyProfile';
-import { DepartmentsPage, DesignationsPage, WorkModesPage, WorkLocationsPage, EmploymentTypesPage, JobStatusesPage, ShiftsPage, LeaveTypesPage, LeavePoliciesPage, PayrollComponentsPage, PenaltiesConfigPage } from './pages/settings/AllSettings';
+import { DepartmentsPage, DesignationsPage, WorkModesPage, WorkLocationsPage, EmploymentTypesPage, JobStatusesPage, ReportingManagersPage, ShiftsPage, LeaveTypesPage, LeavePoliciesPage, PayrollComponentsPage, PenaltiesConfigPage } from './pages/settings/AllSettings';
 import CustomFields from './pages/settings/CustomFields';
 
 function RootRedirect() {
