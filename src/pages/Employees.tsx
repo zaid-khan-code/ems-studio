@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { employees, departments, jobStatuses, workModes, getStatusColor } from '../data/dummyData';
+import { useData } from '../contexts/DataContext';
+import { getStatusColor } from '../data/dummyData';
 import { Plus, Search, Eye, Pencil, Trash2 } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useToastContext } from '../contexts/ToastContext';
@@ -8,6 +9,7 @@ import { useToastContext } from '../contexts/ToastContext';
 export default function Employees() {
   const navigate = useNavigate();
   const { showToast } = useToastContext();
+  const { employees, deleteEmployee, departments, jobStatuses, workModes } = useData();
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -87,7 +89,7 @@ export default function Employees() {
         open={!!deleteTarget}
         title="Delete Employee"
         message={`Are you sure you want to delete ${deleteTarget}? This action cannot be undone.`}
-        onConfirm={() => { showToast(`Employee ${deleteTarget} deleted`); setDeleteTarget(null); }}
+        onConfirm={() => { deleteEmployee(deleteTarget!); showToast(`Employee ${deleteTarget} deleted`); setDeleteTarget(null); }}
         onCancel={() => setDeleteTarget(null)}
       />
     </div>
