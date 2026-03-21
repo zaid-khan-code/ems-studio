@@ -1,26 +1,27 @@
 import React, { useState } from 'react';
-import { payrollData, employees, formatPKR, getStatusColor, numberToWords } from '../data/dummyData';
-import { Plus, Eye, Pencil, Lock, FileText, Printer, Download } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
+import { getStatusColor, formatPKR, numberToWords } from '../data/dummyData';
+import { Plus, Eye, Pencil, Lock, Printer, Download } from 'lucide-react';
 import Modal from '../components/Modal';
 import DecisionBanner from '../components/DecisionBanner';
 import { useToastContext } from '../contexts/ToastContext';
 
 export default function Payroll() {
   const { showToast } = useToastContext();
+  const { payrollData, setPayrollData, employees } = useData();
   const [genModal, setGenModal] = useState(false);
   const [viewModal, setViewModal] = useState(false);
   const [viewEmp, setViewEmp] = useState(payrollData[0]);
-  const [monthFilter, setMonthFilter] = useState('March');
   const [statusFilter, setStatusFilter] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  // Generate form state
   const [selEmp, setSelEmp] = useState('EMP001');
   const [workingDays] = useState(31);
   const [empWorkingDays, setEmpWorkingDays] = useState(28);
+  const [absents, setAbsents] = useState(3);
   const [clUsed, setClUsed] = useState(0);
   const [mlUsed, setMlUsed] = useState(0);
   const [alUsed, setAlUsed] = useState(0);
-  const [absents, setAbsents] = useState(3);
   const [basic, setBasic] = useState(150000);
   const [houseRent, setHouseRent] = useState(30000);
   const [medical, setMedical] = useState(10000);
@@ -39,22 +40,40 @@ export default function Payroll() {
   const grossSalary = totalEarnings;
   const netSalary = grossSalary - totalDeductions;
 
-  const filtered = payrollData.filter(p => {
-    if (statusFilter && p.status !== statusFilter) return false;
-    return true;
-  });
+  const filtered = payrollData.filter((p: any) => !statusFilter || p.status === statusFilter);
 
-  const openView = (p: typeof payrollData[0]) => { setViewEmp(p); setViewModal(true); };
+  const openView = (p: any) => { setViewEmp(p); setViewModal(true); };
 
   const loadSalary = () => {
-    const emp = employees.find(e => e.id === selEmp);
-    if (emp) {
-      setBasic(emp.salary.basic);
-      setHouseRent(emp.salary.houseRent);
-      setMedical(emp.salary.medical);
-      setConveyance(emp.salary.conveyance);
-      setCommission(emp.salary.commission);
-    }
+    const emp = employees.find((e: any) => e.id === selEmp);
+    if (emp) { setBasic(emp.salary.basic); setHouseRent(emp.salary.houseRent); setMedical(emp.salary.medical); setConveyance(emp.salary.conveyance); setCommission(emp.salary.commission); }
+  };
+
+  const savePayroll = (status: string) => {
+    setSaving(true);
+    setTimeout(() => {
+      const emp = employees.find((e: any) => e.id === selEmp);
+      const existing = payrollData.findIndex((p: any) => p.empId === selEmp);
+      const newRecord = {
+        empId: selEmp, name: emp?.name || '', workingDays, paidDays, absents,
+        clUsed, mlUsed, alUsed,
+        basic, houseRent, medical, conveyance, commission,
+        absentDeduction, tax, loan: loanInstallment, advance, latePenalty, otherDeduction: otherDed,
+        status, paymentMode: emp?.paymentMode || 'Online Transfer',
+      };
+      if (existing >= 0) {
+        setPayrollData(prev => prev.map((p: any, i: number) => i === existing ? newRecord : p));
+      } else {
+        setPayrollData(prev => [...prev, newRecord]);
+      }
+      setSaving(false); setGenModal(false);
+      showToast(status === 'Draft' ? 'Saved as draft' : 'Payroll finalized');
+    }, 600);
+  };
+
+  const finalize = (empId: string) => {
+    setPayrollData(prev => prev.map((p: any) => p.empId === empId ? { ...p, status: 'Finalized' } : p));
+    showToast('Payroll finalized');
   };
 
   return (
@@ -66,9 +85,7 @@ export default function Payroll() {
 
       <div className="card" style={{ marginBottom: 12 }}>
         <div style={{ display: 'flex', gap: 10 }}>
-          <select className="input select-input" style={{ width: 140 }} value={monthFilter} onChange={e => setMonthFilter(e.target.value)}>
-            <option>March</option><option>February</option><option>January</option>
-          </select>
+          <select className="input select-input" style={{ width: 140 }}><option>March</option><option>February</option><option>January</option></select>
           <input className="input mono" style={{ width: 80 }} value="2026" readOnly />
           <select className="input select-input" style={{ width: 120 }} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
             <option value="">All</option><option>Draft</option><option>Finalized</option>
@@ -80,7 +97,7 @@ export default function Payroll() {
         <table>
           <thead><tr><th>Emp ID</th><th>Name</th><th>Working Days</th><th>Paid Days</th><th>Gross</th><th>Deductions</th><th>Net</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
-            {filtered.map((p, i) => {
+            {filtered.map((p: any, i: number) => {
               const g = p.basic + p.houseRent + p.medical + p.conveyance + p.commission;
               const d = p.absentDeduction + p.tax + p.loan + p.advance + p.latePenalty + p.otherDeduction;
               return (
@@ -92,9 +109,8 @@ export default function Payroll() {
                   <td className="mono" style={{ fontWeight: 600, color: 'var(--green)' }}>{formatPKR(g - d)}</td>
                   <td><span className={`pill ${getStatusColor(p.status)}`}>{p.status}</span></td>
                   <td><div style={{ display: 'flex', gap: 4 }}>
-                    <button className="ico-btn" style={{ width: 28, height: 28 }} title="View Payslip" onClick={() => openView(p)}><Eye size={13} /></button>
-                    {p.status === 'Draft' && <button className="ico-btn" style={{ width: 28, height: 28 }} title="Edit"><Pencil size={13} /></button>}
-                    {p.status === 'Draft' && <button className="ico-btn" style={{ width: 28, height: 28 }} title="Finalize" onClick={() => showToast('Payroll finalized')}><Lock size={13} /></button>}
+                    <button className="ico-btn" style={{ width: 28, height: 28 }} title="View" onClick={() => openView(p)}><Eye size={13} /></button>
+                    {p.status === 'Draft' && <button className="ico-btn" style={{ width: 28, height: 28 }} title="Finalize" onClick={() => finalize(p.empId)}><Lock size={13} /></button>}
                   </div></td>
                 </tr>
               );
@@ -103,108 +119,75 @@ export default function Payroll() {
         </table>
       </div>
 
-      {/* Generate Payroll Modal */}
+      {/* Generate Modal */}
       <Modal open={genModal} onClose={() => setGenModal(false)} title="Generate Payroll — March 2026" wide footer={
-        <><button className="btn btn-secondary" onClick={() => { showToast('Saved as draft'); setGenModal(false); }}>Save as Draft</button><button className="btn btn-primary" onClick={() => { showToast('Payroll finalized'); setGenModal(false); }}>Finalize & Lock Payroll</button></>
+        <><button className="btn btn-secondary" onClick={() => savePayroll('Draft')} disabled={saving}>{saving ? 'Saving...' : 'Save as Draft'}</button>
+        <button className="btn btn-primary" onClick={() => savePayroll('Finalized')} disabled={saving}>{saving ? 'Saving...' : 'Finalize & Lock'}</button></>
       }>
-        {/* Step 1 - Employee */}
         <div className="form-row">
           <div className="form-group"><label className="form-label">Employee</label>
             <select className="input select-input" value={selEmp} onChange={e => setSelEmp(e.target.value)}>
-              {employees.map(e => <option key={e.id} value={e.id}>{e.id} — {e.name}</option>)}
+              {employees.map((e: any) => <option key={e.id} value={e.id}>{e.id} — {e.name}</option>)}
             </select>
           </div>
           <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <button className="btn btn-secondary" onClick={loadSalary}>Load Salary Structure</button>
+            <button className="btn btn-secondary" onClick={loadSalary}>Load Salary</button>
           </div>
         </div>
 
-        {/* Step 2 - Working Days */}
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', marginBottom: 8, marginTop: 12 }}>Working Days</div>
         <div className="form-row">
           <div className="form-group"><label className="form-label">Total Working Days</label><input className="input mono" value={workingDays} readOnly style={{ background: 'var(--steell)', width: 80 }} /></div>
           <div className="form-group"><label className="form-label">Employee Working Days</label><input className="input mono" type="number" value={empWorkingDays} onChange={e => setEmpWorkingDays(+e.target.value)} style={{ width: 80 }} /></div>
           <div className="form-group"><label className="form-label">Absents</label><input className="input mono" type="number" value={absents} onChange={e => setAbsents(+e.target.value)} style={{ width: 80 }} /></div>
         </div>
-        <div className="form-row">
-          <div className="form-group"><label className="form-label">CL Used</label><input className="input mono" type="number" value={clUsed} onChange={e => setClUsed(+e.target.value)} style={{ width: 80 }} /></div>
-          <div className="form-group"><label className="form-label">ML Used</label><input className="input mono" type="number" value={mlUsed} onChange={e => setMlUsed(+e.target.value)} style={{ width: 80 }} /></div>
-          <div className="form-group"><label className="form-label">AL Used</label><input className="input mono" type="number" value={alUsed} onChange={e => setAlUsed(+e.target.value)} style={{ width: 80 }} /></div>
-          <div className="form-group"><label className="form-label">Total Paid Days</label><input className="input mono" value={paidDays} readOnly style={{ background: 'var(--steell)', width: 80 }} /></div>
-        </div>
 
-        {/* Step 3 - Earnings */}
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--green)', textTransform: 'uppercase', marginBottom: 8, marginTop: 12 }}>Earnings</div>
         <div className="form-row">
-          <div className="form-group"><label className="form-label">Basic Salary</label><input className="input mono" type="number" value={basic} onChange={e => setBasic(+e.target.value)} /></div>
-          <div className="form-group"><label className="form-label">House Rent Allowance</label><input className="input mono" type="number" value={houseRent} onChange={e => setHouseRent(+e.target.value)} /></div>
+          <div className="form-group"><label className="form-label">Basic</label><input className="input mono" type="number" value={basic} onChange={e => setBasic(+e.target.value)} /></div>
+          <div className="form-group"><label className="form-label">House Rent</label><input className="input mono" type="number" value={houseRent} onChange={e => setHouseRent(+e.target.value)} /></div>
         </div>
         <div className="form-row">
-          <div className="form-group"><label className="form-label">Medical Allowance</label><input className="input mono" type="number" value={medical} onChange={e => setMedical(+e.target.value)} /></div>
+          <div className="form-group"><label className="form-label">Medical</label><input className="input mono" type="number" value={medical} onChange={e => setMedical(+e.target.value)} /></div>
           <div className="form-group"><label className="form-label">Conveyance</label><input className="input mono" type="number" value={conveyance} onChange={e => setConveyance(+e.target.value)} /></div>
         </div>
-        <div className="form-row">
-          <div className="form-group"><label className="form-label">Commission</label><input className="input mono" type="number" value={commission} onChange={e => setCommission(+e.target.value)} /></div>
-        </div>
-        <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 600, color: 'var(--t2)', marginTop: 4 }}>Total Earnings: <span className="mono" style={{ color: 'var(--green)' }}>{formatPKR(totalEarnings)}</span></div>
+        <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 600, marginTop: 4 }}>Total Earnings: <span className="mono" style={{ color: 'var(--green)' }}>{formatPKR(totalEarnings)}</span></div>
 
-        {/* Step 4 - Deductions */}
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--red)', textTransform: 'uppercase', marginBottom: 8, marginTop: 12 }}>Deductions</div>
         <div className="form-row">
           <div className="form-group"><label className="form-label">Absent Deduction (auto)</label><input className="input mono" value={formatPKR(absentDeduction)} disabled style={{ background: 'var(--amberl)' }} /></div>
-          <div className="form-group"><label className="form-label">Late Penalty (auto)</label><input className="input mono" value={formatPKR(latePenalty)} disabled style={{ background: 'var(--amberl)' }} /></div>
+          <div className="form-group"><label className="form-label">Tax</label><input className="input mono" type="number" value={tax} onChange={e => setTax(+e.target.value)} /></div>
         </div>
         <div className="form-row">
           <div className="form-group"><label className="form-label">Advance</label><input className="input mono" type="number" value={advance} onChange={e => setAdvance(+e.target.value)} /></div>
-          <div className="form-group"><label className="form-label">Loan Installment</label><input className="input mono" type="number" value={loanInstallment} onChange={e => setLoanInstallment(+e.target.value)} /></div>
+          <div className="form-group"><label className="form-label">Loan</label><input className="input mono" type="number" value={loanInstallment} onChange={e => setLoanInstallment(+e.target.value)} /></div>
         </div>
-        <div className="form-row">
-          <div className="form-group"><label className="form-label">Tax</label><input className="input mono" type="number" value={tax} onChange={e => setTax(+e.target.value)} /></div>
-          <div className="form-group"><label className="form-label">Other Deductions</label><input className="input mono" type="number" value={otherDed} onChange={e => setOtherDed(+e.target.value)} /></div>
-        </div>
-        <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 600, color: 'var(--t2)', marginTop: 4 }}>Total Deductions: <span className="mono" style={{ color: 'var(--red)' }}>{formatPKR(totalDeductions)}</span></div>
+        <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 600, marginTop: 4 }}>Total Deductions: <span className="mono" style={{ color: 'var(--red)' }}>{formatPKR(totalDeductions)}</span></div>
 
-        {/* Summary */}
         <div style={{ background: 'var(--inp)', padding: 14, borderRadius: 'var(--rsm)', marginTop: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 600 }}>Gross Salary</span><span className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--p)' }}>{formatPKR(grossSalary)}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 600 }}>Total Deductions</span><span className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--red)' }}>{formatPKR(totalDeductions)}</span>
-          </div>
-          <div style={{ borderTop: '1px solid var(--br)', paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 13, fontWeight: 700 }}>NET SALARY</span><span className="mono" style={{ fontSize: 18, fontWeight: 800, color: 'var(--green)' }}>{formatPKR(netSalary)}</span>
-          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}><span style={{ fontSize: 12, fontWeight: 600 }}>Gross Salary</span><span className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--p)' }}>{formatPKR(grossSalary)}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}><span style={{ fontSize: 12, fontWeight: 600 }}>Total Deductions</span><span className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--red)' }}>{formatPKR(totalDeductions)}</span></div>
+          <div style={{ borderTop: '1px solid var(--br)', paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: 13, fontWeight: 700 }}>NET SALARY</span><span className="mono" style={{ fontSize: 18, fontWeight: 800, color: 'var(--green)' }}>{formatPKR(netSalary)}</span></div>
           <div style={{ fontSize: 11, fontStyle: 'italic', color: 'var(--t3)', marginTop: 6 }}>Amount in Words: {numberToWords(Math.floor(netSalary))}</div>
         </div>
-
-        <div style={{ marginTop: 12 }}>
-          <DecisionBanner>
-            DECISION NEEDED — Pro-Rated Salary & Tax<br />
-            1. Is basic salary pro-rated per absent day, or always paid full?<br />
-            2. Is tax auto-calculated by salary bracket, or manual entry by HR?<br />
-            3. What is the exact formula for absent deduction?<br />
-            Please confirm in meeting.
-          </DecisionBanner>
-        </div>
+        <div style={{ marginTop: 12 }}><DecisionBanner>DECISION NEEDED — Pro-Rated Salary & Tax formulas. Confirm in meeting.</DecisionBanner></div>
       </Modal>
 
-      {/* Payslip View Modal */}
+      {/* Payslip View */}
       <Modal open={viewModal} onClose={() => setViewModal(false)} title="" wide>
-        <PayslipView data={viewEmp} onClose={() => setViewModal(false)} />
+        {viewEmp && <PayslipView data={viewEmp} employees={employees} onClose={() => setViewModal(false)} />}
       </Modal>
     </div>
   );
 }
 
-function PayslipView({ data, onClose }: { data: typeof payrollData[0]; onClose: () => void }) {
-  const emp = employees.find(e => e.id === data.empId) || employees[0];
+function PayslipView({ data, employees, onClose }: { data: any; employees: any[]; onClose: () => void }) {
+  const emp = employees.find((e: any) => e.id === data.empId) || employees[0];
   const grossEarnings = data.basic + data.houseRent + data.medical + data.conveyance + data.commission;
   const totalDed = data.absentDeduction + data.tax + data.loan + data.advance + data.latePenalty + data.otherDeduction;
   const net = grossEarnings - totalDed;
-
   const cellStyle: React.CSSProperties = { padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--br)' };
-  const headerStyle: React.CSSProperties = { background: 'var(--sb)', color: '#fff', padding: '6px 10px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '.05em' };
+  const headerStyle: React.CSSProperties = { background: 'var(--sb)', color: '#fff', padding: '6px 10px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' };
 
   return (
     <div>
@@ -213,10 +196,7 @@ function PayslipView({ data, onClose }: { data: typeof payrollData[0]; onClose: 
         <button className="btn btn-ghost"><Download size={13} /> Download PDF</button>
       </div>
       <div style={{ border: '2px solid var(--sb)', borderRadius: 'var(--rsm)', overflow: 'hidden' }}>
-        {/* Title */}
         <div style={{ ...headerStyle, textAlign: 'center', fontSize: 14, padding: '10px' }}>PAY SLIP</div>
-
-        {/* Employee Details + Slip Info */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
           <div>
             <div style={headerStyle}>Employee Details</div>
@@ -227,12 +207,10 @@ function PayslipView({ data, onClose }: { data: typeof payrollData[0]; onClose: 
           <div style={{ borderLeft: '1px solid var(--br)' }}>
             <div style={headerStyle}>Slip Information</div>
             {[['Slip No', '25'], ['Dated', 'Thursday, Mar 31, 2026'], ['Pay Slip for', 'March'], ['Year', '2026']].map(([l, v], i) => (
-              <div key={i} style={{ ...cellStyle, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--t3)' }}>{l}</span><span className="mono" style={{ fontWeight: 500 }}>{v}</span></div>
+              <div key={i} style={{ ...cellStyle, display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--t3)' }}>{l}</span><span className="mono">{v}</span></div>
             ))}
           </div>
         </div>
-
-        {/* Working Days + Salary Structure */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
           <div>
             <div style={headerStyle}>Working Days</div>
@@ -248,8 +226,6 @@ function PayslipView({ data, onClose }: { data: typeof payrollData[0]; onClose: 
             <div style={{ ...cellStyle, display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}><span>Total</span><span className="mono">{formatPKR(grossEarnings)}</span></div>
           </div>
         </div>
-
-        {/* Earnings + Deductions */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
           <div>
             <div style={headerStyle}>Earnings</div>
@@ -265,24 +241,10 @@ function PayslipView({ data, onClose }: { data: typeof payrollData[0]; onClose: 
             <div style={{ ...cellStyle, display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}><span>Total</span><span className="mono" style={{ color: 'var(--red)' }}>{formatPKR(totalDed)}</span></div>
           </div>
         </div>
-
-        {/* Amount in Words */}
-        <div style={{ ...cellStyle, fontStyle: 'italic', fontSize: 11, color: 'var(--t2)' }}>Amount in Words: {numberToWords(Math.floor(net))}</div>
-
-        {/* Payment Mode */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 10px', borderTop: '1px solid var(--br)' }}>
-          <span style={{ fontSize: 11, fontWeight: 600 }}>Payment Mode:</span>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11 }}><input type="checkbox" checked={data.paymentMode === 'Cash'} readOnly /> Cash</label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11 }}><input type="checkbox" checked={data.paymentMode === 'Online Transfer'} readOnly /> Online Transfer</label>
-        </div>
-
-        {/* Signatures */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderTop: '1px solid var(--br)', padding: '20px 10px 10px' }}>
+        <div style={{ ...cellStyle, fontStyle: 'italic', fontSize: 11, padding: '8px 10px' }}>Amount in Words: {numberToWords(Math.floor(net))}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-around', padding: '20px 10px 10px', borderTop: '1px solid var(--br)' }}>
           {['Prepared By:', 'Employee Sign:', 'Issued By:'].map((l, i) => (
-            <div key={i} style={{ textAlign: 'center' }}>
-              <div style={{ borderBottom: '1px solid var(--t3)', width: '80%', margin: '0 auto 6px', height: 30 }} />
-              <div style={{ fontSize: 10, color: 'var(--t3)' }}>{l}</div>
-            </div>
+            <div key={i} style={{ textAlign: 'center' }}><div style={{ width: 120, borderBottom: '1px solid var(--t3)', marginBottom: 4 }} /><div style={{ fontSize: 10, color: 'var(--t3)' }}>{l}</div></div>
           ))}
         </div>
       </div>
