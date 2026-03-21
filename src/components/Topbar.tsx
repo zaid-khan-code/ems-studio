@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, Bell, Calendar } from 'lucide-react';
+import { Search, Bell } from 'lucide-react';
 
 const routeNames: Record<string, string> = {
-  '/dashboard': 'Dashboard',
+  '/dashboard': 'Command Center',
   '/employees': 'Employees',
   '/employees/add': 'Add Employee',
   '/attendance': 'Attendance',
@@ -21,7 +21,7 @@ const routeNames: Record<string, string> = {
 };
 
 export default function Topbar() {
-  const { activeRole, switchRole } = useAuth();
+  const { user, activeRole, switchRole } = useAuth();
   const location = useLocation();
   const [time, setTime] = useState(new Date());
 
@@ -35,20 +35,24 @@ export default function Topbar() {
     'Page';
 
   const dateStr = time.toLocaleDateString('en-PK', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-  const timeStr = time.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) + ' PKT';
 
   return (
     <div className="topbar">
       <div className="bc">
-        <span className="bc-home">EMS</span>
-        <span className="bc-sep">/</span>
+        <span className="bc-home">HR Pro ERP</span>
+        <span className="bc-sep">·</span>
         <span className="bc-cur">{pageName}</span>
       </div>
 
-      <div className="topbar-search">
+      <div className="topbar-search" style={{ marginLeft: 'auto', marginRight: 8 }}>
         <Search size={13} style={{ color: 'var(--t3)' }} />
-        <span>Search…</span>
+        <span>Search employees, records, reports...</span>
         <kbd>⌘K</kbd>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span className="pill pill-blue" style={{ fontSize: 9, cursor: 'pointer' }}>● FY 2025–26</span>
+        <span className="pill pill-blue" style={{ fontSize: 9, cursor: 'pointer' }}>● Q4</span>
       </div>
 
       <div className="topbar-right">
@@ -64,12 +68,11 @@ export default function Topbar() {
           ))}
         </div>
         <span className="tdate">{dateStr}</span>
-        <span className="tdate">{timeStr}</span>
         <div className="ico-btn">
           <Bell size={14} />
           <div className="n-pip" />
         </div>
-        <div className="t-av">SA</div>
+        <div className="t-av">{user?.username?.substring(0, 2).toUpperCase() || 'SA'}</div>
       </div>
     </div>
   );
