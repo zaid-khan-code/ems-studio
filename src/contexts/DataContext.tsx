@@ -1,6 +1,14 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  ReactNode,
+} from "react";
 import {
-  employees as defaultEmployees, Employee,
+  employees as defaultEmployees,
+  Employee,
   attendanceData as defaultAttendance,
   allAttendanceToday as defaultAttToday,
   leaveRequests as defaultLeaveReqs,
@@ -22,23 +30,26 @@ import {
   penaltiesConfig as defaultPenaltiesConfig,
   reportingManagers as defaultReportingMgrs,
   customFields as defaultCustomFields,
-} from '../data/dummyData';
+} from "../data/dummyData";
 
 function load<T>(key: string, fallback: T): T {
   try {
-    const stored = localStorage.getItem('ems_' + key);
+    const stored = localStorage.getItem("ems_" + key);
     return stored ? JSON.parse(stored) : fallback;
-  } catch { return fallback; }
+  } catch {
+    return fallback;
+  }
 }
 
 function save(key: string, value: any) {
-  localStorage.setItem('ems_' + key, JSON.stringify(value));
+  localStorage.setItem("ems_" + key, JSON.stringify(value));
 }
 
 interface DataContextType {
   employees: Employee[];
   setEmployees: (fn: (prev: Employee[]) => Employee[]) => void;
   addEmployee: (emp: Employee) => void;
+  updateEmployee: (id: string, emp: Partial<Employee>) => void;
   deleteEmployee: (id: string) => void;
 
   leaveRequests: any[];
@@ -67,6 +78,11 @@ interface DataContextType {
   setDepartments: (fn: (prev: string[]) => string[]) => void;
   designations: string[];
   setDesignations: (fn: (prev: string[]) => string[]) => void;
+  // Department-linked designations for dropdowns
+  designationsByDept: Record<string, string[]>;
+  setDesignationsByDept: (
+    fn: (prev: Record<string, string[]>) => Record<string, string[]>,
+  ) => void;
   workModes: string[];
   setWorkModes: (fn: (prev: string[]) => string[]) => void;
   workLocations: string[];
@@ -77,91 +93,238 @@ interface DataContextType {
   setJobStatuses: (fn: (prev: string[]) => string[]) => void;
   reportingManagers: string[];
   setReportingManagers: (fn: (prev: string[]) => string[]) => void;
+  // Reporting managers with department
+  reportingManagersWithDept: { name: string; department: string }[];
+  setReportingManagersWithDept: (
+    fn: (
+      prev: { name: string; department: string }[],
+    ) => { name: string; department: string }[],
+  ) => void;
 
   // Settings - object arrays
   shifts: typeof defaultShifts;
   setShifts: (fn: (prev: typeof defaultShifts) => typeof defaultShifts) => void;
   leaveTypes: typeof defaultLeaveTypes;
-  setLeaveTypes: (fn: (prev: typeof defaultLeaveTypes) => typeof defaultLeaveTypes) => void;
+  setLeaveTypes: (
+    fn: (prev: typeof defaultLeaveTypes) => typeof defaultLeaveTypes,
+  ) => void;
   leavePolicies: typeof defaultLeavePolicies;
-  setLeavePolicies: (fn: (prev: typeof defaultLeavePolicies) => typeof defaultLeavePolicies) => void;
+  setLeavePolicies: (
+    fn: (prev: typeof defaultLeavePolicies) => typeof defaultLeavePolicies,
+  ) => void;
   payrollComponents: typeof defaultPayrollComps;
-  setPayrollComponents: (fn: (prev: typeof defaultPayrollComps) => typeof defaultPayrollComps) => void;
+  setPayrollComponents: (
+    fn: (prev: typeof defaultPayrollComps) => typeof defaultPayrollComps,
+  ) => void;
   penaltiesConfig: typeof defaultPenaltiesConfig;
-  setPenaltiesConfig: (fn: (prev: typeof defaultPenaltiesConfig) => typeof defaultPenaltiesConfig) => void;
+  setPenaltiesConfig: (
+    fn: (prev: typeof defaultPenaltiesConfig) => typeof defaultPenaltiesConfig,
+  ) => void;
   customFields: typeof defaultCustomFields;
-  setCustomFields: (fn: (prev: typeof defaultCustomFields) => typeof defaultCustomFields) => void;
+  setCustomFields: (
+    fn: (prev: typeof defaultCustomFields) => typeof defaultCustomFields,
+  ) => void;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
 
-function usePersisted<T>(key: string, fallback: T): [T, (fn: (prev: T) => T) => void] {
+function usePersisted<T>(
+  key: string,
+  fallback: T,
+): [T, (fn: (prev: T) => T) => void] {
   const [state, setState] = useState<T>(() => load(key, fallback));
-  const update = useCallback((fn: (prev: T) => T) => {
-    setState(prev => {
-      const next = fn(prev);
-      save(key, next);
-      return next;
-    });
-  }, [key]);
+  const update = useCallback(
+    (fn: (prev: T) => T) => {
+      setState((prev) => {
+        const next = fn(prev);
+        save(key, next);
+        return next;
+      });
+    },
+    [key],
+  );
   return [state, update];
 }
 
+const defaultDesignationsByDept: Record<string, string[]> = {
+  Engineering: [
+    "Software Engineer",
+    "Senior Software Engineer",
+    "Tech Lead",
+    "Engineering Manager",
+  ],
+  Marketing: [
+    "Marketing Executive",
+    "Marketing Manager",
+    "Digital Marketing Specialist",
+  ],
+  HR: ["HR Executive", "HR Manager", "Recruiter"],
+  Sales: ["Sales Executive", "Sales Manager", "Business Development"],
+  Finance: ["Accountant", "Finance Manager", "Financial Analyst"],
+};
+
+const defaultReportingManagersWithDept = [
+  { name: "Ali Raza", department: "Engineering" },
+  { name: "Sara Khan", department: "Marketing" },
+  { name: "Usman Ahmed", department: "HR" },
+  { name: "Fatima Noor", department: "Sales" },
+  { name: "Hassan Malik", department: "Finance" },
+];
+
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [employees, setEmployees] = usePersisted('employees', defaultEmployees);
-  const [leaveRequests, setLeaveRequests] = usePersisted('leaveRequests', defaultLeaveReqs);
-  const [payrollData, setPayrollData] = usePersisted('payrollData', defaultPayroll);
-  const [promotions, setPromotions] = usePersisted('promotions', defaultPromotions);
-  const [penalties, setPenalties] = usePersisted('penalties', defaultPenalties);
-  const [auditLog, setAuditLog] = usePersisted('auditLog', defaultAuditLog);
-  const [hrAccounts, setHrAccounts] = usePersisted('hrAccounts', defaultHrAccounts);
-  const [attendanceData, setAttendanceData] = usePersisted('attendanceData', defaultAttendance);
-  const [departments, setDepartments] = usePersisted('departments', defaultDepts);
-  const [designations, setDesignations] = usePersisted('designations', defaultDesigs);
-  const [workModes, setWorkModes] = usePersisted('workModes', defaultWorkModes);
-  const [workLocations, setWorkLocations] = usePersisted('workLocations', defaultWorkLocs);
-  const [employmentTypes, setEmploymentTypes] = usePersisted('employmentTypes', defaultEmpTypes);
-  const [jobStatuses, setJobStatuses] = usePersisted('jobStatuses', defaultJobStatuses);
-  const [reportingManagers, setReportingManagers] = usePersisted('reportingManagers', defaultReportingMgrs);
-  const [shifts, setShifts] = usePersisted('shifts', defaultShifts);
-  const [leaveTypes, setLeaveTypes] = usePersisted('leaveTypes', defaultLeaveTypes);
-  const [leavePolicies, setLeavePolicies] = usePersisted('leavePolicies', defaultLeavePolicies);
-  const [payrollComponents, setPayrollComponents] = usePersisted('payrollComponents', defaultPayrollComps);
-  const [penaltiesConfig, setPenaltiesConfig] = usePersisted('penaltiesConfig', defaultPenaltiesConfig);
-  const [customFields, setCustomFields] = usePersisted('customFields', defaultCustomFields);
+  const [employees, setEmployees] = usePersisted("employees", defaultEmployees);
+  const [leaveRequests, setLeaveRequests] = usePersisted(
+    "leaveRequests",
+    defaultLeaveReqs,
+  );
+  const [payrollData, setPayrollData] = usePersisted(
+    "payrollData",
+    defaultPayroll,
+  );
+  const [promotions, setPromotions] = usePersisted(
+    "promotions",
+    defaultPromotions,
+  );
+  const [penalties, setPenalties] = usePersisted("penalties", defaultPenalties);
+  const [auditLog, setAuditLog] = usePersisted("auditLog", defaultAuditLog);
+  const [hrAccounts, setHrAccounts] = usePersisted(
+    "hrAccounts",
+    defaultHrAccounts,
+  );
+  const [attendanceData, setAttendanceData] = usePersisted(
+    "attendanceData",
+    defaultAttendance,
+  );
+  const [departments, setDepartments] = usePersisted(
+    "departments",
+    defaultDepts,
+  );
+  const [designations, setDesignations] = usePersisted(
+    "designations",
+    defaultDesigs,
+  );
+  const [designationsByDept, setDesignationsByDept] = usePersisted(
+    "designationsByDept",
+    defaultDesignationsByDept,
+  );
+  const [workModes, setWorkModes] = usePersisted("workModes", defaultWorkModes);
+  const [workLocations, setWorkLocations] = usePersisted(
+    "workLocations",
+    defaultWorkLocs,
+  );
+  const [employmentTypes, setEmploymentTypes] = usePersisted(
+    "employmentTypes",
+    defaultEmpTypes,
+  );
+  const [jobStatuses, setJobStatuses] = usePersisted(
+    "jobStatuses",
+    defaultJobStatuses,
+  );
+  const [reportingManagers, setReportingManagers] = usePersisted(
+    "reportingManagers",
+    defaultReportingMgrs,
+  );
+  const [reportingManagersWithDept, setReportingManagersWithDept] =
+    usePersisted("reportingManagersWithDept", defaultReportingManagersWithDept);
+  const [shifts, setShifts] = usePersisted("shifts", defaultShifts);
+  const [leaveTypes, setLeaveTypes] = usePersisted(
+    "leaveTypes",
+    defaultLeaveTypes,
+  );
+  const [leavePolicies, setLeavePolicies] = usePersisted(
+    "leavePolicies",
+    defaultLeavePolicies,
+  );
+  const [payrollComponents, setPayrollComponents] = usePersisted(
+    "payrollComponents",
+    defaultPayrollComps,
+  );
+  const [penaltiesConfig, setPenaltiesConfig] = usePersisted(
+    "penaltiesConfig",
+    defaultPenaltiesConfig,
+  );
+  const [customFields, setCustomFields] = usePersisted(
+    "customFields",
+    defaultCustomFields,
+  );
 
-  const addEmployee = useCallback((emp: Employee) => {
-    setEmployees(prev => [...prev, emp]);
-  }, [setEmployees]);
+  const addEmployee = useCallback(
+    (emp: Employee) => {
+      setEmployees((prev) => [...prev, emp]);
+    },
+    [setEmployees],
+  );
 
-  const deleteEmployee = useCallback((id: string) => {
-    setEmployees(prev => prev.filter(e => e.id !== id));
-  }, [setEmployees]);
+  const updateEmployee = useCallback(
+    (id: string, updates: Partial<Employee>) => {
+      setEmployees((prev) =>
+        prev.map((e) => (e.id === id ? { ...e, ...updates } : e)),
+      );
+    },
+    [setEmployees],
+  );
+
+  const deleteEmployee = useCallback(
+    (id: string) => {
+      setEmployees((prev) => prev.filter((e) => e.id !== id));
+    },
+    [setEmployees],
+  );
 
   return (
-    <DataContext.Provider value={{
-      employees, setEmployees, addEmployee, deleteEmployee,
-      leaveRequests, setLeaveRequests,
-      payrollData, setPayrollData,
-      promotions, setPromotions,
-      penalties, setPenalties,
-      auditLog, setAuditLog,
-      hrAccounts, setHrAccounts,
-      attendanceData, setAttendanceData,
-      departments, setDepartments,
-      designations, setDesignations,
-      workModes, setWorkModes,
-      workLocations, setWorkLocations,
-      employmentTypes, setEmploymentTypes,
-      jobStatuses, setJobStatuses,
-      reportingManagers, setReportingManagers,
-      shifts, setShifts,
-      leaveTypes, setLeaveTypes,
-      leavePolicies, setLeavePolicies,
-      payrollComponents, setPayrollComponents,
-      penaltiesConfig, setPenaltiesConfig,
-      customFields, setCustomFields,
-    }}>
+    <DataContext.Provider
+      value={{
+        employees,
+        setEmployees,
+        addEmployee,
+        updateEmployee,
+        deleteEmployee,
+        leaveRequests,
+        setLeaveRequests,
+        payrollData,
+        setPayrollData,
+        promotions,
+        setPromotions,
+        penalties,
+        setPenalties,
+        auditLog,
+        setAuditLog,
+        hrAccounts,
+        setHrAccounts,
+        attendanceData,
+        setAttendanceData,
+        departments,
+        setDepartments,
+        designations,
+        setDesignations,
+        designationsByDept,
+        setDesignationsByDept,
+        workModes,
+        setWorkModes,
+        workLocations,
+        setWorkLocations,
+        employmentTypes,
+        setEmploymentTypes,
+        jobStatuses,
+        setJobStatuses,
+        reportingManagers,
+        setReportingManagers,
+        reportingManagersWithDept,
+        setReportingManagersWithDept,
+        shifts,
+        setShifts,
+        leaveTypes,
+        setLeaveTypes,
+        leavePolicies,
+        setLeavePolicies,
+        payrollComponents,
+        setPayrollComponents,
+        penaltiesConfig,
+        setPenaltiesConfig,
+        customFields,
+        setCustomFields,
+      }}
+    >
       {children}
     </DataContext.Provider>
   );
@@ -169,6 +332,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
 export function useData() {
   const ctx = useContext(DataContext);
-  if (!ctx) throw new Error('useData must be used within DataProvider');
+  if (!ctx) throw new Error("useData must be used within DataProvider");
   return ctx;
 }

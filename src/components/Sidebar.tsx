@@ -1,46 +1,89 @@
-import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { useData } from "../contexts/DataContext";
 import {
-  LayoutDashboard, Users, CalendarCheck, CalendarDays, DollarSign, TrendingUp,
-  Settings, Building2, Briefcase, Monitor, MapPin, UserCheck, ClipboardList,
-  Clock, CalendarRange, Wallet, AlertTriangle, FormInput, ShieldCheck,
-  ScrollText, LogOut, ChevronDown, ChevronRight, Zap
-} from 'lucide-react';
+  LayoutDashboard,
+  Users,
+  CalendarCheck,
+  CalendarDays,
+  DollarSign,
+  TrendingUp,
+  Settings,
+  Building2,
+  Briefcase,
+  Monitor,
+  MapPin,
+  UserCheck,
+  ClipboardList,
+  Clock,
+  CalendarRange,
+  Wallet,
+  AlertTriangle,
+  FormInput,
+  ShieldCheck,
+  ScrollText,
+  LogOut,
+  ChevronDown,
+  ChevronRight,
+  Zap,
+  MinusCircle,
+} from "lucide-react";
 
 export default function Sidebar() {
   const { user, activeRole, logout } = useAuth();
+  const { leaveRequests } = useData();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
-  const isSettingsActive = location.pathname.startsWith('/settings');
+  const isSettingsActive = location.pathname.startsWith("/settings");
+
+  // Count pending leave requests for the badge
+  const pendingLeaveCount = leaveRequests.filter(
+    (l: any) => l.status === "Pending",
+  ).length;
 
   const mainLinks = [
-    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/employees', icon: Users, label: 'Employees' },
-    { to: '/attendance', icon: CalendarCheck, label: 'Attendance', badge: '3' },
-    { to: '/leave', icon: CalendarDays, label: 'Leave', badge: '3' },
-    { to: '/payroll', icon: DollarSign, label: 'Payroll' },
+    { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { to: "/employees", icon: Users, label: "Employees" },
+    { to: "/attendance", icon: CalendarCheck, label: "Attendance", badge: "3" },
+    {
+      to: "/leave",
+      icon: CalendarDays,
+      label: "Leave",
+      badge: pendingLeaveCount > 0 ? String(pendingLeaveCount) : undefined,
+    },
+    { to: "/deductions", icon: MinusCircle, label: "Deductions" },
+    { to: "/payroll", icon: DollarSign, label: "Payroll" },
   ];
 
   const settingsLinks = [
-    { to: '/settings/departments', label: 'Departments' },
-    { to: '/settings/designations', label: 'Designations' },
-    { to: '/settings/job-statuses', label: 'Job Statuses' },
-    { to: '/settings/reporting-managers', label: 'Reporting Mgrs' },
-    { to: '/settings/work-modes', label: 'Work Modes' },
-    { to: '/settings/work-locations', label: 'Work Locations' },
-    { to: '/settings/employment-types', label: 'Emp. Types' },
+    { to: "/settings/departments", label: "Departments" },
+    { to: "/settings/designations", label: "Designations" },
+    { to: "/settings/job-statuses", label: "Job Statuses" },
+    { to: "/settings/reporting-managers", label: "Reporting Mgrs" },
+    { to: "/settings/work-modes", label: "Work Modes" },
+    { to: "/settings/work-locations", label: "Work Locations" },
+    { to: "/settings/employment-types", label: "Emp. Types" },
+    { to: "/settings/shifts", label: "Shifts" },
+    { to: "/settings/leave-types", label: "Leave Types" },
+    { to: "/settings/leave-policies", label: "Leave Policies" },
+    { to: "/settings/payroll-components", label: "Salary Components" },
+    { to: "/settings/penalties-config", label: "Penalties Config" },
+    { to: "/settings/tax-config", label: "Tax Config" },
   ];
 
   const adminLinks = [
-    { to: '/accounts', icon: ShieldCheck, label: 'HR Accounts' },
+    { to: "/accounts", icon: ShieldCheck, label: "HR Accounts" },
+    { to: "/settings/custom-fields", icon: FormInput, label: "Custom Fields" },
   ];
 
   return (
     <div className="sidebar">
       <div className="sb-logo">
         <div className="sb-logo-row">
-          <div className="sb-mark"><Users size={17} /></div>
+          <div className="sb-mark">
+            <Users size={17} />
+          </div>
           <div>
             <div className="sb-title">HR Pro</div>
             <div className="sb-subtitle">ENTERPRISE · ERP</div>
@@ -54,8 +97,12 @@ export default function Sidebar() {
 
       <div className="sb-sec">
         <div className="sb-lbl">Core Modules</div>
-        {mainLinks.map(link => (
-          <NavLink key={link.to} to={link.to} className={({ isActive }) => `nav-a ${isActive ? 'active' : ''}`}>
+        {mainLinks.map((link) => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            className={({ isActive }) => `nav-a ${isActive ? "active" : ""}`}
+          >
             <link.icon size={14} className="nav-ico" />
             {link.label}
             {link.badge && <span className="nav-badge">{link.badge}</span>}
@@ -69,26 +116,41 @@ export default function Sidebar() {
         <button
           className="collapsible-toggle"
           onClick={() => setSettingsOpen(!settingsOpen)}
-          style={{ color: isSettingsActive ? '#90caf9' : 'var(--sb-lbl)' }}
+          style={{ color: isSettingsActive ? "#90caf9" : "var(--sb-lbl)" }}
         >
-          {settingsOpen ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+          {settingsOpen ? (
+            <ChevronDown size={10} />
+          ) : (
+            <ChevronRight size={10} />
+          )}
           Configuration
         </button>
-        {settingsOpen && settingsLinks.map(link => (
-          <NavLink key={link.to} to={link.to} className={({ isActive }) => `nav-a ${isActive ? 'active' : ''}`}>
-            <Settings size={14} className="nav-ico" />
-            {link.label}
-          </NavLink>
-        ))}
+        {settingsOpen &&
+          settingsLinks.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) => `nav-a ${isActive ? "active" : ""}`}
+            >
+              <Settings size={14} className="nav-ico" />
+              {link.label}
+            </NavLink>
+          ))}
       </div>
 
-      {activeRole === 'super_admin' && (
+      {activeRole === "super_admin" && (
         <>
           <div className="sb-div" />
           <div className="sb-sec">
             <div className="sb-lbl">Administration</div>
-            {adminLinks.map(link => (
-              <NavLink key={link.to} to={link.to} className={({ isActive }) => `nav-a ${isActive ? 'active' : ''}`}>
+            {adminLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  `nav-a ${isActive ? "active" : ""}`
+                }
+              >
                 <link.icon size={14} className="nav-ico" />
                 {link.label}
               </NavLink>
@@ -100,12 +162,17 @@ export default function Sidebar() {
       <div className="sb-bottom">
         <div className="sb-user">
           <div className="sb-chip" onClick={logout}>
-            <div className="sb-av">{user?.username?.substring(0, 2).toUpperCase()}</div>
+            <div className="sb-av">
+              {user?.username?.substring(0, 2).toUpperCase()}
+            </div>
             <div>
               <div className="sb-un">{user?.username}</div>
               <div className="sb-ur">{activeRole}</div>
             </div>
-            <LogOut size={14} style={{ marginLeft: 'auto', color: 'rgba(255,255,255,.18)' }} />
+            <LogOut
+              size={14}
+              style={{ marginLeft: "auto", color: "rgba(255,255,255,.18)" }}
+            />
           </div>
         </div>
       </div>
