@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Search, Bell } from 'lucide-react';
 
 const routeNames: Record<string, string> = {
-  '/dashboard': 'Command Center',
+  '/dashboard': 'Dashboard',
   '/employees': 'Employees',
   '/employees/add': 'Add Employee',
   '/attendance': 'Attendance',
@@ -39,7 +39,7 @@ export default function Topbar() {
   return (
     <div className="topbar">
       <div className="bc">
-        <span className="bc-home">HR Pro ERP</span>
+        <span className="bc-home">EMS</span>
         <span className="bc-sep">·</span>
         <span className="bc-cur">{pageName}</span>
       </div>
@@ -48,11 +48,6 @@ export default function Topbar() {
         <Search size={13} style={{ color: 'var(--t3)' }} />
         <span>Search employees, records, reports...</span>
         <kbd>⌘K</kbd>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span className="pill pill-blue" style={{ fontSize: 9, cursor: 'pointer' }}>● FY 2025–26</span>
-        <span className="pill pill-blue" style={{ fontSize: 9, cursor: 'pointer' }}>● Q4</span>
       </div>
 
       <div className="topbar-right">

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { getStatusColor } from '../data/dummyData';
-import { Plus, Search, Eye, Pencil, Trash2, ChevronUp, ChevronDown, Download, Mail, ArrowUpDown } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, ChevronUp, ChevronDown, ArrowUpDown, UserX } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useToastContext } from '../contexts/ToastContext';
 
@@ -12,13 +12,13 @@ type SortDir = 'asc' | 'desc';
 export default function Employees() {
   const navigate = useNavigate();
   const { showToast } = useToastContext();
-  const { employees, deleteEmployee, departments, jobStatuses, workModes } = useData();
+  const { employees, setEmployees, departments, jobStatuses, workModes } = useData();
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [modeFilter, setModeFilter] = useState('');
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
+  const [showTerminated, setShowTerminated] = useState(false);
+  const [terminateConfirm, setTerminateConfirm] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sortKey, setSortKey] = useState<SortKey>('id');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
@@ -27,6 +27,7 @@ export default function Employees() {
 
   const filtered = useMemo(() => {
     let list = employees.filter(e => {
+      if (!showTerminated && e.jobStatus === 'Terminated') return false;
       if (search && !e.name.toLowerCase().includes(search.toLowerCase()) && !e.id.toLowerCase().includes(search.toLowerCase())) return false;
       if (deptFilter && e.department !== deptFilter) return false;
       if (statusFilter && e.jobStatus !== statusFilter) return false;
@@ -40,7 +41,7 @@ export default function Employees() {
       return sortDir === 'asc' ? cmp : -cmp;
     });
     return list;
-  }, [employees, search, deptFilter, statusFilter, modeFilter, sortKey, sortDir]);
+  }, [employees, search, deptFilter, statusFilter, modeFilter, sortKey, sortDir, showTerminated]);
 
   const totalPages = Math.ceil(filtered.length / perPage);
   const paged = filtered.slice(page * perPage, (page + 1) * perPage);
@@ -58,11 +59,11 @@ export default function Employees() {
     else setSelected(new Set(paged.map(e => e.id)));
   };
 
-  const bulkDelete = () => {
-    selected.forEach(id => deleteEmployee(id));
-    showToast(`${selected.size} employee(s) deleted`);
+  const terminateSelected = () => {
+    setEmployees(prev => prev.map(e => selected.has(e.id) ? { ...e, jobStatus: 'Terminated' } : e));
+    showToast(`${selected.size} employee(s) terminated successfully`);
     setSelected(new Set());
-    setBulkDeleteConfirm(false);
+    setTerminateConfirm(false);
   };
 
   const clearFilters = () => { setSearch(''); setDeptFilter(''); setStatusFilter(''); setModeFilter(''); };
@@ -72,10 +73,12 @@ export default function Employees() {
     return sortDir === 'asc' ? <ChevronUp size={10} style={{ marginLeft: 3, color: 'var(--p)' }} /> : <ChevronDown size={10} style={{ marginLeft: 3, color: 'var(--p)' }} />;
   };
 
+  const activeCount = employees.filter(e => e.jobStatus !== 'Terminated').length;
+
   return (
     <div>
       <div className="pg-head">
-        <div><div className="pg-greet">Employees</div><div className="pg-sub">Manage all employees in your organization · {employees.length} total</div></div>
+        <div><div className="pg-greet">Employees</div><div className="pg-sub">Manage all employees in your organization · {activeCount} active</div></div>
         <button className="btn btn-primary" onClick={() => navigate('/employees/add')}><Plus size={13} /> Add Employee</button>
       </div>
 
@@ -98,6 +101,10 @@ export default function Employees() {
             <option value="">All Work Modes</option>
             {workModes.map(m => <option key={m}>{m}</option>)}
           </select>
+          <label style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', color: 'var(--t3)' }}>
+            <input type="checkbox" checked={showTerminated} onChange={e => setShowTerminated(e.target.checked)} />
+            Show terminated
+          </label>
           {(search || deptFilter || statusFilter || modeFilter) && (
             <button className="btn btn-sm btn-ghost" onClick={clearFilters}>Clear All</button>
           )}
@@ -109,9 +116,7 @@ export default function Employees() {
         <div className="card" style={{ marginBottom: 12, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--pl)', border: '1px solid var(--p3)' }}>
           <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--p)' }}>{selected.size} selected</span>
           <div style={{ flex: 1 }} />
-          <button className="btn btn-sm btn-ghost"><Download size={12} /> Export Selected</button>
-          <button className="btn btn-sm btn-ghost"><Mail size={12} /> Send Email</button>
-          <button className="btn btn-sm btn-danger" onClick={() => setBulkDeleteConfirm(true)}><Trash2 size={12} /> Delete Selected</button>
+          <button className="btn btn-sm btn-danger" onClick={() => setTerminateConfirm(true)}><UserX size={12} /> Terminate Selected</button>
         </div>
       )}
 
@@ -136,7 +141,7 @@ export default function Employees() {
               {paged.length === 0 ? (
                 <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--t3)' }}>No employees match your filters</td></tr>
               ) : paged.map(e => (
-                <tr key={e.id} style={selected.has(e.id) ? { background: 'var(--pl)' } : {}}>
+                <tr key={e.id} style={{ ...(selected.has(e.id) ? { background: 'var(--pl)' } : {}), ...(e.jobStatus === 'Terminated' ? { opacity: 0.5 } : {}) }}>
                   <td><input type="checkbox" checked={selected.has(e.id)} onChange={() => toggleSelect(e.id)} /></td>
                   <td className="mono">{e.id}</td>
                   <td style={{ fontWeight: 600 }}>{e.name}</td>
@@ -150,7 +155,6 @@ export default function Employees() {
                     <div style={{ display: 'flex', gap: 4 }}>
                       <button className="ico-btn" style={{ width: 28, height: 28 }} onClick={() => navigate(`/employees/${e.id}`)}><Eye size={13} /></button>
                       <button className="ico-btn" style={{ width: 28, height: 28 }} onClick={() => navigate('/employees/add')}><Pencil size={13} /></button>
-                      <button className="ico-btn" style={{ width: 28, height: 28 }} onClick={() => setDeleteTarget(e.id)}><Trash2 size={13} /></button>
                     </div>
                   </td>
                 </tr>
@@ -162,7 +166,7 @@ export default function Employees() {
         {/* Pagination */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, fontSize: 12, color: 'var(--t3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>Showing {page * perPage + 1}–{Math.min((page + 1) * perPage, filtered.length)} of {filtered.length}</span>
+            <span>Showing {filtered.length === 0 ? 0 : page * perPage + 1}–{Math.min((page + 1) * perPage, filtered.length)} of {filtered.length}</span>
             <select className="input select-input" style={{ width: 70, padding: '4px 6px', fontSize: 11 }} value={perPage} onChange={e => { setPerPage(+e.target.value); setPage(0); }}>
               {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
@@ -170,7 +174,7 @@ export default function Employees() {
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
             <button className="btn btn-sm btn-ghost" disabled={page === 0} onClick={() => setPage(p => p - 1)}>← Prev</button>
-            {Array.from({ length: totalPages }, (_, i) => (
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => (
               <button key={i} className={`btn btn-sm ${page === i ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setPage(i)}>{i + 1}</button>
             ))}
             <button className="btn btn-sm btn-ghost" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>Next →</button>
@@ -178,11 +182,8 @@ export default function Employees() {
         </div>
       </div>
 
-      <ConfirmDialog open={!!deleteTarget} title="Delete Employee" message={`Are you sure you want to delete ${deleteTarget}? This action cannot be undone.`}
-        onConfirm={() => { deleteEmployee(deleteTarget!); showToast(`Employee ${deleteTarget} deleted`); setDeleteTarget(null); }}
-        onCancel={() => setDeleteTarget(null)} />
-      <ConfirmDialog open={bulkDeleteConfirm} title="Delete Selected Employees" message={`Delete ${selected.size} employee(s)? This cannot be undone.`}
-        onConfirm={bulkDelete} onCancel={() => setBulkDeleteConfirm(false)} />
+      <ConfirmDialog open={terminateConfirm} title="Terminate Selected Employees" message={`Are you sure you want to terminate ${selected.size} selected employee(s)? Their status will be set to Terminated and they will be hidden from the active list.`}
+        onConfirm={terminateSelected} onCancel={() => setTerminateConfirm(false)} />
     </div>
   );
 }

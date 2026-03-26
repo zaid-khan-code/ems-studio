@@ -20,6 +20,7 @@ export default function Sidebar() {
     { to: '/attendance', icon: CalendarCheck, label: 'Attendance', badge: '3' },
     { to: '/leave', icon: CalendarDays, label: 'Leave', badge: '3' },
     { to: '/payroll', icon: DollarSign, label: 'Payroll' },
+    { to: '/promotions', icon: TrendingUp, label: 'Promotions' },
   ];
 
   const settingsLinks = [
@@ -30,10 +31,19 @@ export default function Sidebar() {
     { to: '/settings/work-modes', label: 'Work Modes' },
     { to: '/settings/work-locations', label: 'Work Locations' },
     { to: '/settings/employment-types', label: 'Emp. Types' },
+    { to: '/settings/shifts', label: 'Shifts' },
+    { to: '/settings/leave-types', label: 'Leave Types' },
+    { to: '/settings/leave-policies', label: 'Leave Policies' },
+    { to: '/settings/payroll-components', label: 'Salary Components' },
+    { to: '/settings/penalties-config', label: 'Penalties Config' },
+    { to: '/settings/tax-config', label: 'Tax Config' },
+    { to: '/settings/global-days', label: 'Global Days' },
   ];
 
   const adminLinks = [
     { to: '/accounts', icon: ShieldCheck, label: 'HR Accounts' },
+    { to: '/audit-log', icon: ScrollText, label: 'Audit Log' },
+    { to: '/settings/custom-fields', icon: FormInput, label: 'Custom Fields' },
   ];
 
   return (
@@ -42,13 +52,13 @@ export default function Sidebar() {
         <div className="sb-logo-row">
           <div className="sb-mark"><Users size={17} /></div>
           <div>
-            <div className="sb-title">HR Pro</div>
-            <div className="sb-subtitle">ENTERPRISE · ERP</div>
+            <div className="sb-title">EMS</div>
+            <div className="sb-subtitle">Employee Management</div>
           </div>
         </div>
         <div className="sb-env">
           <div className="sb-env-dot" />
-          <span className="sb-env-text">PRODUCTION · v2.0.4</span>
+          <span className="sb-env-text">PROTOTYPE · v1.0</span>
         </div>
       </div>
 
