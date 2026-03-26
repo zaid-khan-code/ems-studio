@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import SettingsPage from './SettingsPage';
 import { useData } from '../../contexts/DataContext';
+import { useToastContext } from '../../contexts/ToastContext';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
+import Modal from '../../components/Modal';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import { formatPKR } from '../../data/dummyData';
 
 export function DepartmentsPage() {
@@ -120,12 +124,94 @@ export function TaxConfigPage() {
 
 export function GlobalDaysPage() {
   const { globalDays, setGlobalDays } = useData();
-  const [addModal, setAddModal] = React.useState(false);
-  const [editIdx, setEditIdx] = React.useState<number | null>(null);
-  const [deleteIdx, setDeleteIdx] = React.useState<number | null>(null);
-  const [form, setForm] = React.useState({ title: '', date: '', type: 'holiday', affects_attendance: true, show_banner: false, banner_message: '' });
-  const [typeFilter, setTypeFilter] = React.useState('');
-  const { showToast } = (await import('../../contexts/ToastContext')).useToastContext ? { showToast: () => {} } : { showToast: () => {} };
+  const { showToast } = useToastContext();
+  const [modal, setModal] = useState(false);
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [deleteIdx, setDeleteIdx] = useState<number | null>(null);
+  const [typeFilter, setTypeFilter] = useState('');
+  const [form, setForm] = useState({ title: '', date: '', type: 'holiday', affects_attendance: true, show_banner: false, banner_message: '' });
 
-  return null; // placeholder — implemented below
+  const filtered = globalDays.filter(g => !typeFilter || g.type === typeFilter);
+
+  const openAdd = () => { setForm({ title: '', date: '', type: 'holiday', affects_attendance: true, show_banner: false, banner_message: '' }); setEditIdx(null); setModal(true); };
+  const openEdit = (idx: number) => {
+    const g = globalDays[idx];
+    setForm({ title: g.title, date: g.date, type: g.type, affects_attendance: g.affects_attendance, show_banner: g.show_banner, banner_message: g.banner_message });
+    setEditIdx(idx); setModal(true);
+  };
+
+  const handleSave = () => {
+    if (editIdx !== null) {
+      setGlobalDays(prev => prev.map((g, i) => i === editIdx ? { ...g, ...form } : g));
+      showToast('Event updated');
+    } else {
+      setGlobalDays(prev => [...prev, { id: 'GD' + String(Date.now()).slice(-3), ...form, created_by: 'superadmin', created_at: new Date().toISOString(), is_active: true }]);
+      showToast('Event added');
+    }
+    setModal(false);
+  };
+
+  const handleDelete = () => {
+    if (deleteIdx !== null) { setGlobalDays(prev => prev.filter((_, i) => i !== deleteIdx)); showToast('Event deleted'); setDeleteIdx(null); }
+  };
+
+  const toggleActive = (idx: number) => {
+    setGlobalDays(prev => prev.map((g, i) => i === idx ? { ...g, is_active: !g.is_active } : g));
+    showToast('Status toggled');
+  };
+
+  return (
+    <div>
+      <div className="pg-head">
+        <div><div className="pg-greet">Global Days</div><div className="pg-sub">Manage holidays, emergency closures and company events</div></div>
+        <button className="btn btn-primary" onClick={openAdd}><Plus size={13} /> Add Event</button>
+      </div>
+      <div className="card" style={{ marginBottom: 12 }}>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <select className="input select-input" style={{ width: 160 }} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+            <option value="">All Types</option><option value="holiday">Holiday</option><option value="emergency">Emergency</option><option value="company_event">Company Event</option>
+          </select>
+        </div>
+      </div>
+      <div className="card">
+        {filtered.length === 0 ? <div style={{ textAlign: 'center', padding: 40, color: 'var(--t3)' }}>No events configured</div> : (
+          <table>
+            <thead><tr><th>Title</th><th>Date</th><th>Type</th><th>Affects Attendance</th><th>Banner</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody>
+              {filtered.map((g, i) => {
+                const realIdx = globalDays.indexOf(g);
+                return (
+                  <tr key={g.id}>
+                    <td style={{ fontWeight: 600 }}>{g.title}</td>
+                    <td className="mono">{g.date}</td>
+                    <td><span className={`pill ${g.type === 'emergency' ? 'pill-red' : g.type === 'holiday' ? 'pill-green' : 'pill-blue'}`}>{g.type}</span></td>
+                    <td>{g.affects_attendance ? 'Yes' : 'No'}</td>
+                    <td>{g.show_banner ? 'Yes' : 'No'}</td>
+                    <td><button className={`pill ${g.is_active ? 'pill-green' : 'pill-red'}`} style={{ cursor: 'pointer', border: 'none' }} onClick={() => toggleActive(realIdx)}>{g.is_active ? 'Active' : 'Inactive'}</button></td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button className="ico-btn" style={{ width: 28, height: 28 }} onClick={() => openEdit(realIdx)}><Pencil size={13} /></button>
+                        <button className="ico-btn" style={{ width: 28, height: 28 }} onClick={() => setDeleteIdx(realIdx)}><Trash2 size={13} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+      <Modal open={modal} onClose={() => setModal(false)} title={editIdx !== null ? 'Edit Event' : 'Add Event'} footer={
+        <><button className="btn btn-secondary" onClick={() => setModal(false)}>Cancel</button><button className="btn btn-primary" onClick={handleSave}>Save</button></>
+      }>
+        <div className="form-group"><label className="form-label">Title</label><input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
+        <div className="form-group"><label className="form-label">Date</label><input className="input" type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} /></div>
+        <div className="form-group"><label className="form-label">Type</label><select className="input select-input" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}><option value="holiday">Holiday</option><option value="emergency">Emergency</option><option value="company_event">Company Event</option></select></div>
+        <div className="form-group"><label style={{ fontSize: 12, cursor: 'pointer' }}><input type="checkbox" checked={form.affects_attendance} onChange={e => setForm(f => ({ ...f, affects_attendance: e.target.checked }))} /> Affects attendance (auto-excuse absences)</label></div>
+        <div className="form-group"><label style={{ fontSize: 12, cursor: 'pointer' }}><input type="checkbox" checked={form.show_banner} onChange={e => setForm(f => ({ ...f, show_banner: e.target.checked }))} /> Show global banner</label></div>
+        {form.show_banner && <div className="form-group"><label className="form-label">Banner Message</label><input className="input" value={form.banner_message} onChange={e => setForm(f => ({ ...f, banner_message: e.target.value }))} /></div>}
+      </Modal>
+      <ConfirmDialog open={deleteIdx !== null} title="Delete Event" message="Are you sure you want to delete this event?" onConfirm={handleDelete} onCancel={() => setDeleteIdx(null)} />
+    </div>
+  );
 }
