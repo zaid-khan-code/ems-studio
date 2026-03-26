@@ -38,7 +38,7 @@ export default function AuditLog() {
     <div>
       <div className="pg-head">
         <div><div className="pg-greet">Audit Log</div><div className="pg-sub">Track all system activities</div></div>
-        <button className="btn btn-secondary" onClick={exportCSV}><Download size={13} /> Export CSV</button>
+        
       </div>
       <div className="card" style={{ marginBottom: 12 }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>

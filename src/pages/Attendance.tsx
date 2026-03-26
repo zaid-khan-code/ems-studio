@@ -122,10 +122,7 @@ export default function Attendance() {
     <div>
       <div className="pg-head">
         <div><div className="pg-greet">Attendance</div><div className="pg-sub">Track and manage employee attendance</div></div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-ghost"><Download size={13} /> Export Sheet PDF</button>
-          <button className="btn btn-ghost"><Upload size={13} /> Import CSV</button>
-        </div>
+        <div style={{ display: 'flex', gap: 8 }} />
       </div>
       <DecisionBanner>DECISION NEEDED — Attendance Verification Method: Manual / Self-mark / Biometric? Confirm in meeting.</DecisionBanner>
       <div className="tabs" style={{ marginTop: 12 }}>
@@ -229,8 +226,6 @@ export default function Attendance() {
           <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
             <select className="input select-input" style={{ width: 120 }}><option>March</option><option>February</option></select>
             <input className="input mono" style={{ width: 80 }} value="2026" readOnly />
-            <button className="btn btn-ghost"><Download size={13} /> Export Excel</button>
-            <button className="btn btn-ghost"><Download size={13} /> Export PDF</button>
           </div>
           <table>
             <thead><tr><th>Employee</th><th>Present</th><th>Absent</th><th>Late</th><th>Half Day</th><th>On Leave</th><th>Total</th><th>%</th></tr></thead>

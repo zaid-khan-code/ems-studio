@@ -193,7 +193,6 @@ function PayslipView({ data, employees, onClose }: { data: any; employees: any[]
     <div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 12 }}>
         <button className="btn btn-ghost"><Printer size={13} /> Print</button>
-        <button className="btn btn-ghost"><Download size={13} /> Download PDF</button>
       </div>
       <div style={{ border: '2px solid var(--sb)', borderRadius: 'var(--rsm)', overflow: 'hidden' }}>
         <div style={{ ...headerStyle, textAlign: 'center', fontSize: 14, padding: '10px' }}>PAY SLIP</div>

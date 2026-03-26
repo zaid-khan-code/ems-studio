@@ -20,7 +20,7 @@ export default function MyPayslips() {
     <div>
       <div className="pg-head">
         <div><div className="pg-greet">My Payslips</div><div className="pg-sub">View your salary details</div></div>
-        <button className="btn btn-ghost" disabled><Download size={13} /> Download All (Coming Soon)</button>
+        
       </div>
       <div className="card">
         <table>
